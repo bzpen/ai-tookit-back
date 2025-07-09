@@ -1,7 +1,7 @@
-import { Router } from 'express';
+import { Router, type Router as ExpressRouter } from 'express';
 import { v1Routes } from './v1/index';
 
-export const routes = Router();
+export const routes: ExpressRouter = Router();
 
 // 版本1路由
 routes.use('/v1', v1Routes);

@@ -1,6 +1,6 @@
-import { Router } from 'express';
+import { Router, type Router as ExpressRouter } from 'express';
 
-export const v1Routes = Router();
+export const v1Routes: ExpressRouter = Router();
 
 // 测试路由
 v1Routes.get('/test', (_req, res) => {

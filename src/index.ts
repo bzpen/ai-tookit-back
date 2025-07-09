@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 
 import { AppConfig } from './config/app.config';
 import { DatabaseConfig } from './config/database.config';
+import { validateConfigs } from './config';
 import { routes } from './routes/index';
 import { ErrorMiddleware } from './middleware/error.middleware';
 import { LoggerMiddleware } from './middleware/logger.middleware';
@@ -80,7 +81,12 @@ class App {
 
   public async start(): Promise<void> {
     try {
+      // 验证配置
+      LoggerUtil.info('正在验证配置...');
+      validateConfigs();
+      
       // 初始化数据库
+      LoggerUtil.info('正在初始化数据库...');
       await DatabaseConfig.initialize();
       
       // 启动服务器
@@ -88,6 +94,7 @@ class App {
         LoggerUtil.info(`服务器启动成功，端口: ${this.port}`);
         LoggerUtil.info(`环境: ${process.env['NODE_ENV'] || 'development'}`);
         LoggerUtil.info(`健康检查: http://localhost:${this.port}/health`);
+        LoggerUtil.info(`数据库: ${process.env['SUPABASE_URL'] ? 'Supabase' : 'Local SQLite'}`);
       });
     } catch (error) {
       LoggerUtil.error('服务器启动失败:', error);

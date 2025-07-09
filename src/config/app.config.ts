@@ -17,5 +17,12 @@ export const AppConfig = {
   log: {
     level: process.env['LOG_LEVEL'] || 'info',
     file: process.env['LOG_FILE'] || './logs/app.log'
+  },
+  jwt: {
+    secret: process.env['JWT_SECRET'] || 'your_jwt_secret_key_minimum_32_characters',
+    expiresIn: process.env['JWT_EXPIRES_IN'] || '7d'
+  },
+  security: {
+    bcryptRounds: parseInt(process.env['BCRYPT_ROUNDS'] || '12', 10)
   }
 }; 

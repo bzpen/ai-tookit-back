@@ -5,10 +5,11 @@ alwaysApply: true
 # 项目结构设计规范
 
 ## 技术栈
-- **后端**: Node.js + Express + TypeScript
+- **后端**: Node.js + Express + TypeScript + pnpm
 - **数据库**: SQLite (初期) → PostgreSQL (扩展期)
 - **图片存储**: Cloudflare R2 + 定时清理
 - **部署**: Railway/Render
+- **数据库云服务**： supabase 参考文档 https://supabase.com/docs/reference/javascript/initializing
 
 ## 项目根目录结构
 ```
@@ -473,6 +474,7 @@ src/types/
 - **函数名**: camelCase，如 `getUserById`
 - **常量**: UPPER_SNAKE_CASE，如 `MAX_FILE_SIZE`
 - **接口**: PascalCase，以I开头，如 `IUserService`
+- **文件引入路径**： 使用@/**
 
 ### 2. 导入导出规则
 - **内部模块**: 使用相对路径

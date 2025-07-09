@@ -1,46 +1,62 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
 
 export class DatabaseConfig {
-  private static db: Database.Database;
+  private static client: SupabaseClient<Database>;
 
-  static get database(): Database.Database {
-    if (!this.db) {
-      throw new Error('数据库未初始化');
+  static get supabase(): SupabaseClient<Database> {
+    if (!this.client) {
+      throw new Error('Supabase 客户端未初始化');
     }
-    return this.db;
+    return this.client;
   }
 
   static async initialize(): Promise<void> {
     try {
-      // 创建data目录
-      const dataDir = path.dirname(process.env['DATABASE_URL'] || './data/app.db');
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
+      const supabaseUrl = process.env['SUPABASE_URL'];
+      const supabaseKey = process.env['SUPABASE_ANON_KEY'];
+
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase 配置不完整，请检查环境变量');
       }
 
-      // 初始化数据库连接
-      this.db = new Database(process.env['DATABASE_URL'] || './data/app.db');
-      
-      // 设置数据库配置
-      this.db.pragma('foreign_keys = ON');
-      this.db.pragma('journal_mode = WAL');
-      this.db.pragma('synchronous = NORMAL');
-      this.db.pragma('temp_store = MEMORY');
-      this.db.pragma('mmap_size = 268435456'); // 256MB
+      this.client = createClient<Database>(supabaseUrl, supabaseKey, {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: false
+        }
+      });
 
-      console.log('数据库初始化成功');
+      // 测试连接
+      const { error } = await this.client.from('users').select('count').limit(1);
+      if (error && error.code !== 'PGRST116') { // PGRST116 是表不存在的错误码
+        throw error;
+      }
+
+      console.log('Supabase 数据库连接成功');
     } catch (error) {
-      console.error('数据库初始化失败:', error);
+      console.error('Supabase 数据库初始化失败:', error);
       throw error;
     }
   }
 
-  static close(): void {
-    if (this.db) {
-      this.db.close();
-      console.log('数据库连接已关闭');
+  static async close(): Promise<void> {
+    // Supabase 客户端不需要手动关闭连接
+    console.log('Supabase 连接已清理');
+  }
+
+  static async healthCheck(): Promise<boolean> {
+    try {
+      const { error } = await this.client
+        .from('users')
+        .select('id')
+        .limit(1);
+      
+      return !error;
+    } catch (error) {
+      console.error('数据库健康检查失败:', error);
+      return false;
     }
   }
 } 
