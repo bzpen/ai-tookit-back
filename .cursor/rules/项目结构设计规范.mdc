@@ -1,0 +1,563 @@
+---
+alwaysApply: true
+---
+
+# 项目结构设计规范
+
+## 技术栈
+- **后端**: Node.js + Express + TypeScript
+- **数据库**: SQLite (初期) → PostgreSQL (扩展期)
+- **图片存储**: Cloudflare R2 + 定时清理
+- **部署**: Railway/Render
+
+## 项目根目录结构
+```
+test-back/
+├── src/                    # 源代码目录
+├── tests/                  # 测试文件目录
+├── docs/                   # 文档目录
+├── scripts/                # 构建和部署脚本
+├── uploads/                # 临时文件存储
+├── .env.example            # 环境变量示例
+├── .gitignore              # Git忽略文件
+├── package.json            # 项目配置
+├── tsconfig.json           # TypeScript配置
+├── docker-compose.yml      # Docker配置
+└── README.md               # 项目说明
+```
+
+## 核心模块划分（src/目录）
+
+### 1. 控制器层 (controllers/)
+- **职责**: 处理HTTP请求，参数验证，响应格式化
+- **规则**: 
+  - 每个业务模块一个控制器文件
+  - 只处理请求响应，不包含业务逻辑
+  - 统一错误处理和响应格式
+
+```
+src/controllers/
+├── auth.controller.ts      # 认证相关
+├── user.controller.ts      # 用户管理
+├── credit.controller.ts    # 积分系统
+├── replicate.controller.ts # AI工具调用
+├── image.controller.ts     # 图片管理
+└── index.ts               # 控制器聚合导出
+```
+
+### 2. 服务层 (services/)
+- **职责**: 核心业务逻辑，第三方API调用
+- **规则**: 
+  - 每个业务域一个服务文件
+  - 可复用的业务逻辑
+  - 事务管理
+
+```
+src/services/
+├── auth.service.ts         # 认证服务
+├── user.service.ts         # 用户服务
+├── credit.service.ts       # 积分业务逻辑
+├── replicate.service.ts    # Replicate API集成
+├── image.service.ts        # 图片处理服务
+├── notification.service.ts # 通知服务
+└── index.ts               # 服务聚合导出
+```
+
+### 3. 数据访问层 (models/)
+- **职责**: 数据模型定义，数据库操作
+- **规则**: 
+  - 每个数据表一个模型文件
+  - 包含CRUD操作和复杂查询
+  - 数据验证和类型定义
+
+```
+src/models/
+├── user.model.ts          # 用户模型
+├── credit.model.ts        # 积分模型
+├── transaction.model.ts   # 交易记录模型
+├── image.model.ts         # 图片模型
+├── task.model.ts          # 任务模型
+├── database.ts            # 数据库连接配置
+└── index.ts              # 模型聚合导出
+```
+
+### 4. 中间件层 (middleware/)
+- **职责**: 请求预处理，认证授权，日志记录
+- **规则**: 
+  - 可复用的中间件函数
+  - 按功能分类组织
+  - 支持链式调用
+
+```
+src/middleware/
+├── auth.middleware.ts      # 认证中间件
+├── validation.middleware.ts # 参数验证中间件
+├── rate-limit.middleware.ts # 限流中间件
+├── logger.middleware.ts    # 日志中间件
+├── error.middleware.ts     # 错误处理中间件
+└── index.ts               # 中间件聚合导出
+```
+
+### 5. 路由层 (routes/)
+- **职责**: API路由定义，路由组织
+- **规则**: 
+  - 按业务模块组织路由
+  - 版本控制支持
+  - 路由文档化
+
+```
+src/routes/
+├── v1/
+│   ├── auth.routes.ts      # 认证路由
+│   ├── user.routes.ts      # 用户路由
+│   ├── credit.routes.ts    # 积分路由
+│   ├── replicate.routes.ts # AI工具路由
+│   ├── image.routes.ts     # 图片路由
+│   └── index.ts           # v1路由聚合
+├── index.ts               # 路由主入口
+└── swagger.ts             # API文档配置
+```
+
+### 6. 工具层 (utils/)
+- **职责**: 通用工具函数，帮助函数
+- **规则**: 
+  - 纯函数，无副作用
+  - 按功能分类
+  - 充分测试
+
+```
+src/utils/
+├── crypto.util.ts         # 加密工具
+├── validation.util.ts     # 验证工具
+├── response.util.ts       # 响应格式化
+├── file.util.ts           # 文件处理工具
+├── date.util.ts           # 日期处理工具
+├── logger.util.ts         # 日志工具
+└── index.ts              # 工具聚合导出
+```
+
+### 7. 配置层 (config/)
+- **职责**: 应用配置，环境变量管理
+- **规则**: 
+  - 环境相关配置分离
+  - 类型安全的配置
+  - 敏感信息保护
+
+```
+src/config/
+├── app.config.ts          # 应用配置
+├── database.config.ts     # 数据库配置
+├── storage.config.ts      # 存储配置
+├── auth.config.ts         # 认证配置
+├── replicate.config.ts    # Replicate配置
+└── index.ts              # 配置聚合导出
+```
+
+### 8. 定时任务层 (jobs/)
+- **职责**: 后台任务，定时清理，数据同步
+- **规则**: 
+  - 任务独立性
+  - 错误处理和重试
+  - 任务监控
+
+```
+src/jobs/
+├── cleanup.job.ts         # 文件清理任务
+├── notification.job.ts    # 通知任务
+├── backup.job.ts          # 数据备份任务
+├── scheduler.ts           # 任务调度器
+└── index.ts              # 任务聚合导出
+```
+
+### 9. 类型定义层 (types/)
+- **职责**: TypeScript类型定义
+- **规则**: 
+  - 全局类型定义
+  - 接口和枚举
+  - 第三方库类型扩展
+
+```
+src/types/
+├── user.types.ts          # 用户相关类型
+├── credit.types.ts        # 积分相关类型
+├── api.types.ts           # API相关类型
+├── common.types.ts        # 通用类型
+├── replicate.types.ts     # Replicate相关类型
+└── index.ts              # 类型聚合导出
+```
+
+## 代码组织规则
+
+### 1. 命名约定
+- **文件名**: 小写字母，单词间用点分隔，如 `user.service.ts`
+- **类名**: PascalCase，如 `UserService`
+- **函数名**: camelCase，如 `getUserById`
+- **常量**: UPPER_SNAKE_CASE，如 `MAX_FILE_SIZE`
+- **接口**: PascalCase，以I开头，如 `IUserService`
+
+### 2. 导入导出规则
+- **内部模块**: 使用相对路径
+- **第三方库**: 使用绝对路径
+- **统一导出**: 每个目录有index.ts文件
+- **类型导入**: 使用 `import type` 语法
+
+### 3. 错误处理规则
+- **统一错误格式**: 使用自定义错误类
+- **错误分类**: 业务错误、系统错误、验证错误
+- **错误日志**: 记录错误堆栈和上下文
+- **用户友好**: 返回可读的错误消息
+
+### 4. 数据验证规则
+- **输入验证**: 使用Joi或Zod进行参数验证
+- **类型检查**: 充分利用TypeScript类型系统
+- **边界检查**: 检查数组越界、空值等
+- **业务验证**: 在服务层进行业务规则验证
+
+### 5. 日志记录规则
+- **日志级别**: error, warn, info, debug
+- **结构化日志**: 使用JSON格式
+- **敏感信息**: 不记录密码、token等敏感信息
+- **请求追踪**: 使用requestId追踪请求链路
+
+### 6. 安全规则
+- **身份验证**: JWT Token验证
+- **权限控制**: 基于角色的访问控制
+- **输入过滤**: 防止SQL注入、XSS攻击
+- **敏感数据**: 加密存储密码等敏感信息
+
+### 7. 性能优化规则
+- **数据库查询**: 使用索引，避免N+1查询
+- **缓存策略**: 适当使用内存缓存
+- **文件处理**: 异步处理大文件
+- **限流控制**: API调用频率限制
+
+### 8. 测试规则
+- **单元测试**: 每个服务函数都有测试
+- **集成测试**: 测试API端点
+- **测试隔离**: 每个测试独立运行
+- **模拟数据**: 使用mock数据进行测试
+
+## 环境配置
+
+### 开发环境
+- 使用热重载
+- 详细的错误信息
+- 开发者工具集成
+- 本地数据库
+
+### 生产环境
+- 代码压缩和优化
+- 错误日志记录
+- 性能监控
+- 安全加固
+
+## 部署结构
+
+### Docker化
+- 多阶段构建
+- 最小化镜像
+- 健康检查
+- 优雅停机
+
+### 监控和日志
+- 应用性能监控
+- 错误追踪
+- 日志聚合
+- 指标收集
+
+## 扩展规则
+
+### 新功能开发
+1. 先设计API接口
+2. 创建数据模型
+3. 实现业务逻辑
+4. 添加路由和控制器
+5. 编写测试用例
+6. 更新文档
+
+### 代码审查
+- 代码规范检查
+- 业务逻辑验证
+- 性能影响评估
+- 安全风险评估
+
+这个结构设计确保了代码的可维护性、可扩展性和团队协作的一致性。 # 项目结构设计规范
+
+## 技术栈
+- **后端**: Node.js + Express + TypeScript
+- **数据库**: SQLite (初期) → PostgreSQL (扩展期)
+- **图片存储**: Cloudflare R2 + 定时清理
+- **部署**: Railway/Render
+
+## 项目根目录结构
+```
+test-back/
+├── src/                    # 源代码目录
+├── tests/                  # 测试文件目录
+├── docs/                   # 文档目录
+├── scripts/                # 构建和部署脚本
+├── uploads/                # 临时文件存储
+├── .env.example            # 环境变量示例
+├── .gitignore              # Git忽略文件
+├── package.json            # 项目配置
+├── tsconfig.json           # TypeScript配置
+├── docker-compose.yml      # Docker配置
+└── README.md               # 项目说明
+```
+
+## 核心模块划分（src/目录）
+
+### 1. 控制器层 (controllers/)
+- **职责**: 处理HTTP请求，参数验证，响应格式化
+- **规则**: 
+  - 每个业务模块一个控制器文件
+  - 只处理请求响应，不包含业务逻辑
+  - 统一错误处理和响应格式
+
+```
+src/controllers/
+├── auth.controller.ts      # 认证相关
+├── user.controller.ts      # 用户管理
+├── credit.controller.ts    # 积分系统
+├── replicate.controller.ts # AI工具调用
+├── image.controller.ts     # 图片管理
+└── index.ts               # 控制器聚合导出
+```
+
+### 2. 服务层 (services/)
+- **职责**: 核心业务逻辑，第三方API调用
+- **规则**: 
+  - 每个业务域一个服务文件
+  - 可复用的业务逻辑
+  - 事务管理
+
+```
+src/services/
+├── auth.service.ts         # 认证服务
+├── user.service.ts         # 用户服务
+├── credit.service.ts       # 积分业务逻辑
+├── replicate.service.ts    # Replicate API集成
+├── image.service.ts        # 图片处理服务
+├── notification.service.ts # 通知服务
+└── index.ts               # 服务聚合导出
+```
+
+### 3. 数据访问层 (models/)
+- **职责**: 数据模型定义，数据库操作
+- **规则**: 
+  - 每个数据表一个模型文件
+  - 包含CRUD操作和复杂查询
+  - 数据验证和类型定义
+
+```
+src/models/
+├── user.model.ts          # 用户模型
+├── credit.model.ts        # 积分模型
+├── transaction.model.ts   # 交易记录模型
+├── image.model.ts         # 图片模型
+├── task.model.ts          # 任务模型
+├── database.ts            # 数据库连接配置
+└── index.ts              # 模型聚合导出
+```
+
+### 4. 中间件层 (middleware/)
+- **职责**: 请求预处理，认证授权，日志记录
+- **规则**: 
+  - 可复用的中间件函数
+  - 按功能分类组织
+  - 支持链式调用
+
+```
+src/middleware/
+├── auth.middleware.ts      # 认证中间件
+├── validation.middleware.ts # 参数验证中间件
+├── rate-limit.middleware.ts # 限流中间件
+├── logger.middleware.ts    # 日志中间件
+├── error.middleware.ts     # 错误处理中间件
+└── index.ts               # 中间件聚合导出
+```
+
+### 5. 路由层 (routes/)
+- **职责**: API路由定义，路由组织
+- **规则**: 
+  - 按业务模块组织路由
+  - 版本控制支持
+  - 路由文档化
+
+```
+src/routes/
+├── v1/
+│   ├── auth.routes.ts      # 认证路由
+│   ├── user.routes.ts      # 用户路由
+│   ├── credit.routes.ts    # 积分路由
+│   ├── replicate.routes.ts # AI工具路由
+│   ├── image.routes.ts     # 图片路由
+│   └── index.ts           # v1路由聚合
+├── index.ts               # 路由主入口
+└── swagger.ts             # API文档配置
+```
+
+### 6. 工具层 (utils/)
+- **职责**: 通用工具函数，帮助函数
+- **规则**: 
+  - 纯函数，无副作用
+  - 按功能分类
+  - 充分测试
+
+```
+src/utils/
+├── crypto.util.ts         # 加密工具
+├── validation.util.ts     # 验证工具
+├── response.util.ts       # 响应格式化
+├── file.util.ts           # 文件处理工具
+├── date.util.ts           # 日期处理工具
+├── logger.util.ts         # 日志工具
+└── index.ts              # 工具聚合导出
+```
+
+### 7. 配置层 (config/)
+- **职责**: 应用配置，环境变量管理
+- **规则**: 
+  - 环境相关配置分离
+  - 类型安全的配置
+  - 敏感信息保护
+
+```
+src/config/
+├── app.config.ts          # 应用配置
+├── database.config.ts     # 数据库配置
+├── storage.config.ts      # 存储配置
+├── auth.config.ts         # 认证配置
+├── replicate.config.ts    # Replicate配置
+└── index.ts              # 配置聚合导出
+```
+
+### 8. 定时任务层 (jobs/)
+- **职责**: 后台任务，定时清理，数据同步
+- **规则**: 
+  - 任务独立性
+  - 错误处理和重试
+  - 任务监控
+
+```
+src/jobs/
+├── cleanup.job.ts         # 文件清理任务
+├── notification.job.ts    # 通知任务
+├── backup.job.ts          # 数据备份任务
+├── scheduler.ts           # 任务调度器
+└── index.ts              # 任务聚合导出
+```
+
+### 9. 类型定义层 (types/)
+- **职责**: TypeScript类型定义
+- **规则**: 
+  - 全局类型定义
+  - 接口和枚举
+  - 第三方库类型扩展
+
+```
+src/types/
+├── user.types.ts          # 用户相关类型
+├── credit.types.ts        # 积分相关类型
+├── api.types.ts           # API相关类型
+├── common.types.ts        # 通用类型
+├── replicate.types.ts     # Replicate相关类型
+└── index.ts              # 类型聚合导出
+```
+
+## 代码组织规则
+
+### 1. 命名约定
+- **文件名**: 小写字母，单词间用点分隔，如 `user.service.ts`
+- **类名**: PascalCase，如 `UserService`
+- **函数名**: camelCase，如 `getUserById`
+- **常量**: UPPER_SNAKE_CASE，如 `MAX_FILE_SIZE`
+- **接口**: PascalCase，以I开头，如 `IUserService`
+
+### 2. 导入导出规则
+- **内部模块**: 使用相对路径
+- **第三方库**: 使用绝对路径
+- **统一导出**: 每个目录有index.ts文件
+- **类型导入**: 使用 `import type` 语法
+
+### 3. 错误处理规则
+- **统一错误格式**: 使用自定义错误类
+- **错误分类**: 业务错误、系统错误、验证错误
+- **错误日志**: 记录错误堆栈和上下文
+- **用户友好**: 返回可读的错误消息
+
+### 4. 数据验证规则
+- **输入验证**: 使用Joi或Zod进行参数验证
+- **类型检查**: 充分利用TypeScript类型系统
+- **边界检查**: 检查数组越界、空值等
+- **业务验证**: 在服务层进行业务规则验证
+
+### 5. 日志记录规则
+- **日志级别**: error, warn, info, debug
+- **结构化日志**: 使用JSON格式
+- **敏感信息**: 不记录密码、token等敏感信息
+- **请求追踪**: 使用requestId追踪请求链路
+
+### 6. 安全规则
+- **身份验证**: JWT Token验证
+- **权限控制**: 基于角色的访问控制
+- **输入过滤**: 防止SQL注入、XSS攻击
+- **敏感数据**: 加密存储密码等敏感信息
+
+### 7. 性能优化规则
+- **数据库查询**: 使用索引，避免N+1查询
+- **缓存策略**: 适当使用内存缓存
+- **文件处理**: 异步处理大文件
+- **限流控制**: API调用频率限制
+
+### 8. 测试规则
+- **单元测试**: 每个服务函数都有测试
+- **集成测试**: 测试API端点
+- **测试隔离**: 每个测试独立运行
+- **模拟数据**: 使用mock数据进行测试
+
+## 环境配置
+
+### 开发环境
+- 使用热重载
+- 详细的错误信息
+- 开发者工具集成
+- 本地数据库
+
+### 生产环境
+- 代码压缩和优化
+- 错误日志记录
+- 性能监控
+- 安全加固
+
+## 部署结构
+
+### Docker化
+- 多阶段构建
+- 最小化镜像
+- 健康检查
+- 优雅停机
+
+### 监控和日志
+- 应用性能监控
+- 错误追踪
+- 日志聚合
+- 指标收集
+
+## 扩展规则
+
+### 新功能开发
+1. 先设计API接口
+2. 创建数据模型
+3. 实现业务逻辑
+4. 添加路由和控制器
+5. 编写测试用例
+6. 更新文档
+
+### 代码审查
+- 代码规范检查
+- 业务逻辑验证
+- 性能影响评估
+- 安全风险评估
+
+这个结构设计确保了代码的可维护性、可扩展性和团队协作的一致性。 
