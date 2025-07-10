@@ -222,9 +222,9 @@ export interface AuthConfig {
 declare global {
   namespace Express {
     interface Request {
-      user?: JwtPayload;
-      token?: string;
-      session?: Session;
+      authUser?: JwtPayload;
+      authToken?: string;
+      authSession?: Session;
     }
   }
 } 

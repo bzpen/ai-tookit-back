@@ -1,6 +1,10 @@
 import { Router, type Router as ExpressRouter } from 'express';
+import { authRoutes } from './auth.routes';
 
 export const v1Routes: ExpressRouter = Router();
+
+// 认证路由
+v1Routes.use('/auth', authRoutes);
 
 // 测试路由
 v1Routes.get('/test', (_req, res) => {

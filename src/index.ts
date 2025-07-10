@@ -4,13 +4,17 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import session from 'express-session';
+import passport from 'passport';
 
 import { AppConfig } from './config/app.config';
 import { DatabaseConfig } from './config/database.config';
+import { sessionConfig } from './config/auth.config';
 import { validateConfigs } from './config';
 import { routes } from './routes/index';
 import { ErrorMiddleware } from './middleware/error.middleware';
 import { LoggerMiddleware } from './middleware/logger.middleware';
+import { initializePassport } from './middleware/passport.middleware';
 import { LoggerUtil } from './utils/logger.util';
 
 // 加载环境变量
@@ -24,6 +28,7 @@ class App {
     this.app = express();
     this.port = AppConfig.port;
     this.initializeMiddlewares();
+    this.initializeAuthentication();
     this.initializeRoutes();
     this.initializeErrorHandling();
   }
@@ -51,6 +56,18 @@ class App {
     
     // 静态文件服务
     this.app.use('/uploads', express.static('uploads'));
+  }
+
+  private initializeAuthentication(): void {
+    // 会话配置
+    this.app.use(session(sessionConfig));
+    
+    // 初始化Passport
+    this.app.use(passport.initialize());
+    this.app.use(passport.session());
+    
+    // 配置Passport策略
+    initializePassport();
   }
 
   private initializeRoutes(): void {
@@ -94,6 +111,7 @@ class App {
         LoggerUtil.info(`服务器启动成功，端口: ${this.port}`);
         LoggerUtil.info(`环境: ${process.env['NODE_ENV'] || 'development'}`);
         LoggerUtil.info(`健康检查: http://localhost:${this.port}/health`);
+        LoggerUtil.info(`Google OAuth: http://localhost:${this.port}/api/v1/auth/google`);
         LoggerUtil.info(`数据库: ${process.env['SUPABASE_URL'] ? 'Supabase' : 'Local SQLite'}`);
       });
     } catch (error) {
