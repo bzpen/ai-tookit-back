@@ -127,27 +127,110 @@ export const securityConfig = {
 export const validateAuthConfig = (): void => {
   const errors: string[] = [];
 
+  console.log("🔍 开始验证认证配置...");
+
+  // 打印当前环境变量状态
+  console.log("📋 当前环境变量状态:");
+  console.log(`   NODE_ENV: ${process.env["NODE_ENV"] || "未设置"}`);
+  console.log(
+    `   JWT_SECRET: ${
+      process.env["JWT_SECRET"]
+        ? `已设置 (${process.env["JWT_SECRET"].length}字符)`
+        : "未设置"
+    }`
+  );
+  console.log(
+    `   SESSION_SECRET: ${
+      process.env["SESSION_SECRET"]
+        ? `已设置 (${process.env["SESSION_SECRET"].length}字符)`
+        : "未设置"
+    }`
+  );
+  console.log(
+    `   GOOGLE_CLIENT_ID: ${
+      process.env["GOOGLE_CLIENT_ID"] ? "已设置" : "未设置"
+    }`
+  );
+  console.log(
+    `   GOOGLE_CLIENT_SECRET: ${
+      process.env["GOOGLE_CLIENT_SECRET"] ? "已设置" : "未设置"
+    }`
+  );
+  console.log(
+    `   SUPABASE_URL: ${process.env["SUPABASE_URL"] ? "已设置" : "未设置"}`
+  );
+  console.log(
+    `   SUPABASE_ANON_KEY: ${
+      process.env["SUPABASE_ANON_KEY"] ? "已设置" : "未设置"
+    }`
+  );
+
   // 验证 JWT Secret
-  if (!jwtConfig.secret || jwtConfig.secret.length < 32) {
-    errors.push("JWT_SECRET 应至少为 32 个字符");
+  console.log("🔐 验证JWT配置...");
+  if (!jwtConfig.secret) {
+    errors.push("JWT_SECRET 环境变量未设置");
+  } else if (jwtConfig.secret === "your_jwt_secret_key_minimum_32_characters") {
+    errors.push("JWT_SECRET 仍使用默认值，请设置真实的密钥");
+  } else if (jwtConfig.secret.length < 32) {
+    errors.push(
+      `JWT_SECRET 长度不足 (当前: ${jwtConfig.secret.length}字符, 需要: 至少32字符)`
+    );
+  } else {
+    console.log("   ✅ JWT_SECRET 验证通过");
   }
 
   // 验证 Session Secret
-  if (!sessionConfig.secret || sessionConfig.secret.length < 32) {
-    errors.push("SESSION_SECRET 应至少为 32 个字符");
+  console.log("🍪 验证Session配置...");
+  if (!sessionConfig.secret) {
+    errors.push("SESSION_SECRET 环境变量未设置");
+  } else if (
+    sessionConfig.secret === "your_session_secret_key_minimum_32_characters"
+  ) {
+    errors.push("SESSION_SECRET 仍使用默认值，请设置真实的密钥");
+  } else if (sessionConfig.secret.length < 32) {
+    errors.push(
+      `SESSION_SECRET 长度不足 (当前: ${sessionConfig.secret.length}字符, 需要: 至少32字符)`
+    );
+  } else {
+    console.log("   ✅ SESSION_SECRET 验证通过");
   }
 
   // 验证 Google OAuth 配置
+  console.log("🔍 验证Google OAuth配置...");
   if (!authConfig.google.clientId) {
-    errors.push("GOOGLE_CLIENT_ID 环境变量未设置");
+    console.log("   ⚠️  GOOGLE_CLIENT_ID 未设置 (Google OAuth功能将不可用)");
+    // 不作为错误，因为Google OAuth是可选的
+  } else {
+    console.log("   ✅ GOOGLE_CLIENT_ID 已设置");
   }
 
   if (!authConfig.google.clientSecret) {
-    errors.push("GOOGLE_CLIENT_SECRET 环境变量未设置");
+    console.log(
+      "   ⚠️  GOOGLE_CLIENT_SECRET 未设置 (Google OAuth功能将不可用)"
+    );
+    // 不作为错误，因为Google OAuth是可选的
+  } else {
+    console.log("   ✅ GOOGLE_CLIENT_SECRET 已设置");
+  }
+
+  // 验证数据库配置
+  console.log("🗄️  验证数据库配置...");
+  if (!process.env["SUPABASE_URL"]) {
+    errors.push("SUPABASE_URL 环境变量未设置");
+  } else {
+    console.log("   ✅ SUPABASE_URL 已设置");
+  }
+
+  if (!process.env["SUPABASE_ANON_KEY"]) {
+    errors.push("SUPABASE_ANON_KEY 环境变量未设置");
+  } else {
+    console.log("   ✅ SUPABASE_ANON_KEY 已设置");
   }
 
   // 生产环境额外检查
   if (process.env["NODE_ENV"] === "production") {
+    console.log("🚀 生产环境额外检查...");
+
     if (jwtConfig.secret === "your_jwt_secret_key_minimum_32_characters") {
       errors.push("生产环境不能使用默认的 JWT Secret");
     }
@@ -161,13 +244,21 @@ export const validateAuthConfig = (): void => {
     if (!sessionConfig.cookie.secure) {
       console.warn("⚠️  生产环境建议启用 HTTPS 以确保 cookie 安全");
     }
+
+    if (!authConfig.google.clientId || !authConfig.google.clientSecret) {
+      console.warn("⚠️  生产环境建议配置 Google OAuth");
+    }
   }
 
   if (errors.length > 0) {
+    console.log("❌ 配置验证失败:");
+    errors.forEach((error) => console.log(`   - ${error}`));
     throw new Error(
       `认证配置验证失败:\n${errors.map((err) => `  - ${err}`).join("\n")}`
     );
   }
+
+  console.log("✅ 所有配置验证通过");
 };
 
 /**
