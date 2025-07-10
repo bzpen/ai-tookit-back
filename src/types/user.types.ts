@@ -52,14 +52,4 @@ export interface UserUsageStats {
   totalCreditsUsed: number;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        email: string;
-        username: string;
-      };
-    }
-  }
-} 
+// Express Request扩展已在 auth.types.ts 中定义，此处删除以避免冲突 
