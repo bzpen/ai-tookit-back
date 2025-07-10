@@ -121,5 +121,5 @@ docs/
 .travis.yml
 .circleci/
 
-# Railway
-railway.json 
+# Render
+render.yaml 

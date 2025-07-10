@@ -8,7 +8,7 @@
 - **数据库**: Supabase (PostgreSQL) 云数据库
 - **认证**: Google OAuth 2.0 + JWT Token
 - **图片存储**: Cloudflare R2
-- **部署**: Railway/Render
+- **部署**: Render
 - **包管理**: pnpm
 
 ## 功能特性
@@ -166,17 +166,15 @@ npm run test:watch
 
 ## 部署
 
-### Railway 部署
-
-1. 连接 GitHub 仓库
-2. 设置环境变量
-3. 自动部署
-
 ### Render 部署
 
-1. 连接 GitHub 仓库
-2. 设置构建命令：`npm run build`
-3. 设置启动命令：`npm start`
+1. 连接 GitHub 仓库到 Render
+2. 设置构建命令：`pnpm install && pnpm run build`
+3. 设置启动命令：`pnpm start`
+4. 配置环境变量
+5. 自动部署
+
+详细部署指南请参考：[Render 部署指南](./docs/RENDER_DEPLOYMENT.md)
 
 ## 监控与日志
 

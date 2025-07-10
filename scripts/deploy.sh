@@ -170,21 +170,24 @@ test_docker_build() {
     fi
 }
 
-# 部署到 Railway
-deploy_to_railway() {
-    echo -e "${BLUE}🚀 部署到 Railway...${NC}"
+# 部署到 Render
+deploy_to_render() {
+    echo -e "${BLUE}🚀 部署到 Render...${NC}"
     
-    # 检查是否安装了 Railway CLI
-    if command -v railway &> /dev/null; then
-        echo -e "${BLUE}使用 Railway CLI 部署...${NC}"
-        railway up
-        echo -e "${GREEN}✅ Railway 部署完成${NC}"
+    echo -e "${BLUE}Render 部署说明：${NC}"
+    echo -e "${YELLOW}1. 推送代码到 GitHub${NC}"
+    echo -e "${YELLOW}2. 在 Render 控制台连接 GitHub 仓库${NC}"
+    echo -e "${YELLOW}3. Render 会自动检测 render.yaml 配置${NC}"
+    echo -e "${YELLOW}4. 配置环境变量后自动部署${NC}"
+    
+    # 检查是否有未提交的更改
+    if git diff --quiet && git diff --cached --quiet; then
+        echo -e "${GREEN}✅ 工作区干净，可以部署${NC}"
     else
-        echo -e "${YELLOW}⚠️  Railway CLI 未安装${NC}"
-        echo -e "${BLUE}请使用以下方式之一进行部署：${NC}"
-        echo -e "${YELLOW}1. 安装 Railway CLI: npm install -g @railway/cli${NC}"
-        echo -e "${YELLOW}2. 推送到 GitHub 触发自动部署${NC}"
-        echo -e "${YELLOW}3. 在 Railway 控制台手动部署${NC}"
+        echo -e "${YELLOW}⚠️  有未提交的更改，请先提交：${NC}"
+        echo -e "${YELLOW}git add .${NC}"
+        echo -e "${YELLOW}git commit -m 'feat: update for Render deployment'${NC}"
+        echo -e "${YELLOW}git push origin main${NC}"
     fi
 }
 
@@ -269,7 +272,7 @@ main() {
     
     # 部署
     if [ "$1" = "--deploy" ]; then
-        deploy_to_railway
+        deploy_to_render
     else
         echo -e "${YELLOW}⚠️  跳过实际部署，使用 --deploy 参数进行部署${NC}"
     fi
@@ -278,7 +281,7 @@ main() {
     echo -e "${BLUE}================================${NC}"
     echo -e "${YELLOW}下一步：${NC}"
     echo -e "${YELLOW}1. 推送代码到 GitHub${NC}"
-    echo -e "${YELLOW}2. 在 Railway 控制台查看部署状态${NC}"
+    echo -e "${YELLOW}2. 在 Render 控制台查看部署状态${NC}"
     echo -e "${YELLOW}3. 验证部署结果${NC}"
 }
 

@@ -251,23 +251,30 @@ function Test-DockerBuild {
     }
 }
 
-# 部署到 Railway
-function Deploy-ToRailway {
-    Write-Host "🚀 部署到 Railway..." -ForegroundColor Blue
+# 部署到 Render
+function Deploy-ToRender {
+    Write-Host "🚀 部署到 Render..." -ForegroundColor Blue
     
-    # 检查是否安装了 Railway CLI
+    Write-Host "Render 部署说明：" -ForegroundColor Blue
+    Write-Host "1. 推送代码到 GitHub" -ForegroundColor Yellow
+    Write-Host "2. 在 Render 控制台连接 GitHub 仓库" -ForegroundColor Yellow
+    Write-Host "3. Render 会自动检测 render.yaml 配置" -ForegroundColor Yellow
+    Write-Host "4. 配置环境变量后自动部署" -ForegroundColor Yellow
+    
+    # 检查是否有未提交的更改
     try {
-        railway --version
-        Write-Host "使用 Railway CLI 部署..." -ForegroundColor Blue
-        railway up
-        Write-Host "✅ Railway 部署完成" -ForegroundColor Green
+        $gitStatus = git status --porcelain
+        if ([string]::IsNullOrEmpty($gitStatus)) {
+            Write-Host "✅ 工作区干净，可以部署" -ForegroundColor Green
+        } else {
+            Write-Host "⚠️  有未提交的更改，请先提交：" -ForegroundColor Yellow
+            Write-Host "git add ." -ForegroundColor Yellow
+            Write-Host "git commit -m 'feat: update for Render deployment'" -ForegroundColor Yellow
+            Write-Host "git push origin main" -ForegroundColor Yellow
+        }
     }
     catch {
-        Write-Host "⚠️  Railway CLI 未安装" -ForegroundColor Yellow
-        Write-Host "请使用以下方式之一进行部署：" -ForegroundColor Blue
-        Write-Host "1. 安装 Railway CLI: npm install -g @railway/cli" -ForegroundColor Yellow
-        Write-Host "2. 推送到 GitHub 触发自动部署" -ForegroundColor Yellow
-        Write-Host "3. 在 Railway 控制台手动部署" -ForegroundColor Yellow
+        Write-Host "⚠️  无法检查 Git 状态" -ForegroundColor Yellow
     }
 }
 
@@ -367,7 +374,7 @@ function Main {
         
         # 部署
         if ($Deploy) {
-            Deploy-ToRailway
+            Deploy-ToRender
         } else {
             Write-Host "⚠️  跳过实际部署，使用 -Deploy 参数进行部署" -ForegroundColor Yellow
         }
@@ -376,7 +383,7 @@ function Main {
         Write-Host "================================" -ForegroundColor Blue
         Write-Host "下一步：" -ForegroundColor Yellow
         Write-Host "1. 推送代码到 GitHub" -ForegroundColor Yellow
-        Write-Host "2. 在 Railway 控制台查看部署状态" -ForegroundColor Yellow
+        Write-Host "2. 在 Render 控制台查看部署状态" -ForegroundColor Yellow
         Write-Host "3. 验证部署结果" -ForegroundColor Yellow
         
     } catch {

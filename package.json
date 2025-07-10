@@ -19,7 +19,7 @@
     "deploy:prepare": "node -e \"console.log('使用 .\\\\scripts\\\\deploy.ps1 或 ./scripts/deploy.sh 进行部署准备')\"",
     "deploy:test": "npm run build && npm run test",
     "deploy:docker": "docker build -t test-back . --target production",
-    "deploy:railway": "railway up",
+    "deploy:render": "echo 'Push to GitHub to trigger Render deployment'",
     "postinstall": "npm run build"
   },
   "keywords": [
