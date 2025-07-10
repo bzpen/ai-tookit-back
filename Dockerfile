@@ -1,8 +1,8 @@
 # 多阶段构建 Dockerfile
 FROM node:18-alpine AS base
 
-# 安装 pnpm
-RUN npm install -g pnpm
+# 启用corepack并安装pnpm（推荐方式）
+RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # 设置工作目录
 WORKDIR /app
@@ -13,7 +13,9 @@ COPY package.json pnpm-lock.yaml ./
 # 开发阶段
 FROM base AS development
 ENV NODE_ENV=development
-RUN pnpm install --frozen-lockfile
+# 设置pnpm配置避免权限问题
+RUN pnpm config set store-dir ~/.pnpm-store
+RUN pnpm install --frozen-lockfile --prefer-offline
 COPY . .
 EXPOSE 3000
 CMD ["pnpm", "run", "dev"]
@@ -21,21 +23,23 @@ CMD ["pnpm", "run", "dev"]
 # 构建阶段
 FROM base AS build
 ENV NODE_ENV=production
-# 安装所有依赖（包括开发依赖）
-RUN pnpm install --frozen-lockfile
+# 设置pnpm配置
+RUN pnpm config set store-dir ~/.pnpm-store
+# 跳过postinstall脚本避免构建问题
+RUN pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
 COPY . .
-# 构建应用
+# 手动构建
 RUN pnpm run build
-# 安装生产依赖
-RUN pnpm install --prod --frozen-lockfile
+# 清理并重新安装生产依赖
+RUN rm -rf node_modules && pnpm install --prod --frozen-lockfile --prefer-offline --ignore-scripts
 
 # 生产阶段
 FROM node:18-alpine AS production
 ENV NODE_ENV=production
 WORKDIR /app
 
-# 安装 pnpm
-RUN npm install -g pnpm
+# 启用corepack并安装pnpm
+RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # 创建非root用户
 RUN addgroup -g 1001 -S nodejs
