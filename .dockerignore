@@ -1,125 +1,58 @@
-# Dependencies
+# 依赖目录
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.pnpm-store/
 
-# Production build
+# 构建输出
 dist/
 build/
 
-# Environment variables
-.env
-.env.local
-.env.production
-.env.test
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-data/
-
-# Logs
+# 日志文件
 logs/
 *.log
+npm-debug.log*
+pnpm-debug.log*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# 运行时文件
+.env
+.env.local
+.env.*.local
 
-# Coverage directory
+# 测试文件
+tests/
 coverage/
-*.lcov
+*.test.ts
+*.spec.ts
 
-# Dependency directories
-jspm_packages/
+# 文档文件
+docs/
+README.md
+*.md
 
-# Optional npm cache directory
-.npm
+# Git文件
+.git/
+.gitignore
 
-# Optional eslint cache
-.eslintcache
-
-# Cache directories
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache
-.cache
-.parcel-cache
-
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
-
-# Editor directories and files
+# IDE文件
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# OS generated files
+# 临时文件
+uploads/
+tmp/
+temp/
+
+# 系统文件
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# Uploads
-uploads/
-!uploads/.gitkeep
+# 部署文件
+scripts/
+docker-compose.yml
+render.yaml
+railway.json
 
-# Test files
-test-results/
-playwright-report/
-tests/
-
-# Docker
-Dockerfile*
-docker-compose*.yml
-.dockerignore
-
-# Git
-.git
-.gitignore
-.gitattributes
-
-# Documentation
-*.md
-docs/
-
-# CI/CD
-.github/
-.gitlab-ci.yml
-.travis.yml
-.circleci/
-
-# Render
-render.yaml 
+# 锁文件备份
+package-lock.json
+yarn.lock 

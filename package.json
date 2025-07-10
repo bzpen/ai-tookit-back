@@ -1,7 +1,7 @@
 {
-  "name": "test-back",
+  "name": "ai-toolkit-back",
   "version": "1.0.0",
-  "description": "基于 Replicate 的AI工具后台项目",
+  "description": "AI工具集后端服务",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -19,8 +19,7 @@
     "deploy:prepare": "node -e \"console.log('使用 .\\\\scripts\\\\deploy.ps1 或 ./scripts/deploy.sh 进行部署准备')\"",
     "deploy:test": "npm run build && npm run test",
     "deploy:docker": "docker build -t test-back . --target production",
-    "deploy:render": "echo 'Push to GitHub to trigger Render deployment'",
-    "postinstall": "npm run build"
+    "deploy:render": "echo 'Push to GitHub to trigger Render deployment'"
   },
   "keywords": [
     "ai",
@@ -78,9 +77,9 @@
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.2"
   },
-  "packageManager": "pnpm@8.15.0",
+  "packageManager": "pnpm@9.9.0",
   "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
   }
 }

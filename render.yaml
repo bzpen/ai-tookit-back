@@ -4,27 +4,17 @@ services:
     env: node
     region: singapore
     plan: free
-    buildCommand: corepack enable && corepack prepare pnpm@8.15.0 --activate && pnpm install && pnpm run build
+    buildCommand: corepack enable && corepack prepare pnpm@9.9.0 --activate && pnpm install --frozen-lockfile && pnpm run build
     startCommand: pnpm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
-      - key: PNPM_FLAGS
-        value: "--shamefully-hoist"
-    # 环境变量需要在Render控制台中设置
-    # 必需变量:
-    # - SUPABASE_URL
-    # - SUPABASE_ANON_KEY
-    # - JWT_SECRET
-    # - SESSION_SECRET
-    # 可选变量:
-    # - GOOGLE_CLIENT_ID
-    # - GOOGLE_CLIENT_SECRET
-    # - REPLICATE_API_TOKEN
-    # - R2_ACCOUNT_ID
-    # - R2_ACCESS_KEY_ID
-    # - R2_SECRET_ACCESS_KEY
-    # - R2_BUCKET_NAME
+        value: 3000
+    # 免费版本资源限制
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+    # 自动部署配置
+    autoDeploy: true
