@@ -11,7 +11,7 @@ const router = Router();
  * 发起 Google OAuth 登录请求
  */
 router.get('/google', AuthController.googleLogin);
-
+  
 /**
  * Google OAuth 回调路由
  * GET /api/v1/auth/google/callback

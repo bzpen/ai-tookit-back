@@ -12,7 +12,7 @@ const configureGoogleStrategy = () => {
       {
         clientID: googleConfig.clientId,
         clientSecret: googleConfig.clientSecret,
-        callbackURL: googleConfig.redirectUri
+        callbackURL: googleConfig.redirectUri,
       },
       async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
         try {
@@ -32,36 +32,50 @@ const configureGoogleStrategy = () => {
             email,
             name
           });
-
-          // 查找或创建用户
-          let user = await UserModel.findByEmail(email);
           
-          if (!user) {
-            // 创建新用户
-            user = await UserModel.create({
-              email,
-              name,
-              avatar_url: picture,
-              google_id: googleId,
-              status: 'active'
-            });
-            console.log('通过 Google OAuth 创建新用户', {
-              userId: user.id,
-              email
-            });
-          } else {
-            // 更新用户信息
+          // 1. 优先使用 Google ID 查找用户
+          let user = await UserModel.findByGoogleId(googleId);
+
+          if (user) {
+            // 如果用户已存在，更新信息并返回
             user = await UserModel.update(user.id, {
               name,
               avatar_url: picture,
-              google_id: googleId,
               last_login_at: new Date().toISOString()
             });
-            console.log('更新 Google 用户信息', {
-              userId: user.id,
-              email
+            console.log('通过 Google ID 更新用户信息', {
+              userId: user.id
             });
+            return done(null, user);
           }
+
+          // 2. 如果 Google ID 不存在，再检查邮箱是否已存在，用于关联现有账号
+          user = await UserModel.findByEmail(email);
+          if(user) {
+            user = await UserModel.update(user.id, {
+              google_id: googleId,
+              name,
+              avatar_url: picture,
+              last_login_at: new Date().toISOString()
+            });
+            console.log('将 Google ID 关联到现有邮箱账户', {
+              userId: user.id
+            });
+            return done(null, user);
+          }
+
+          // 3. 如果都不存在，创建新用户
+          user = await UserModel.create({
+            email,
+            name,
+            avatar_url: picture,
+            google_id: googleId,
+            status: 'active'
+          });
+          console.log('通过 Google OAuth 创建新用户', {
+            userId: user.id,
+            email
+          });
 
           return done(null, user);
 

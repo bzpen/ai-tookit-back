@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { jwtConfig } from "../config/auth.config";
+import { googleConfig } from "../config/google.config";
 import { ResponseUtil } from "../utils/response.util";
 import { LoggerUtil } from "../utils/logger.util";
 import { CryptoUtil } from "../utils/crypto.util";
@@ -12,26 +13,30 @@ export class AuthController {
   /**
    * 发起 Google OAuth 登录
    */
-  public static async googleLogin(
+  public static googleLogin(
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void> {
-    try {
-      LoggerUtil.info("发起 Google OAuth 登录请求", {
-        ip: req.ip,
-        userAgent: req.get("User-Agent"),
-      });
+  ): void {
+    LoggerUtil.info("发起 Google OAuth 登录请求", {
+      ip: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
 
-      // 使用 Passport Google OAuth 策略
-      passport.authenticate("google", {
-        scope: ["profile", "email"],
-        state: (req.query["state"] as string) || undefined,
-      })(req, res, next);
-    } catch (error) {
-      LoggerUtil.error("Google OAuth 登录失败", { error });
-      ResponseUtil.error(res, "Google OAuth 登录失败", 500);
+    // 构建认证参数
+    const authOptions: any = {
+      scope: googleConfig.scopes,
+      accessType: "offline",
+      prompt: "consent",
+    };
+
+    // 只有当 state 存在且不为空时才添加
+    if (req.query["state"]) {
+      authOptions.state = req.query["state"] as string;
     }
+
+    // 使用 Passport Google OAuth 策略
+    passport.authenticate("google", authOptions)(req, res, next);
   }
 
   /**
