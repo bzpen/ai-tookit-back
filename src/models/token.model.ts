@@ -6,9 +6,14 @@ export class TokenModel {
     return DatabaseConfig.supabase;
   }
 
-  // 创建令牌记录
+  // 管理员客户端，用于绕过RLS策略
+  private static get adminClient() {
+    return DatabaseConfig.admin;
+  }
+
+  // 创建令牌记录 - 使用管理员权限
   static async create(tokenData: UserTokenInsert): Promise<UserToken> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('user_tokens')
       .insert({
         ...tokenData,
@@ -75,9 +80,9 @@ export class TokenModel {
     return data || [];
   }
 
-  // 撤销令牌
+  // 撤销令牌 - 使用管理员权限
   static async revoke(tokenId: string): Promise<UserToken> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('user_tokens')
       .update({
         is_revoked: true
@@ -93,9 +98,9 @@ export class TokenModel {
     return data;
   }
 
-  // 根据令牌哈希撤销令牌
+  // 根据令牌哈希撤销令牌 - 使用管理员权限
   static async revokeByTokenHash(tokenHash: string): Promise<UserToken> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('user_tokens')
       .update({
         is_revoked: true
@@ -111,9 +116,9 @@ export class TokenModel {
     return data;
   }
 
-  // 撤销用户的所有令牌
+  // 撤销用户的所有令牌 - 使用管理员权限
   static async revokeAllUserTokens(userId: string): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await this.adminClient
       .from('user_tokens')
       .update({
         is_revoked: true
@@ -126,9 +131,9 @@ export class TokenModel {
     }
   }
 
-  // 撤销用户特定类型的所有令牌
+  // 撤销用户特定类型的所有令牌 - 使用管理员权限
   static async revokeUserTokensByType(userId: string, tokenType: TokenType): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await this.adminClient
       .from('user_tokens')
       .update({
         is_revoked: true
@@ -162,9 +167,9 @@ export class TokenModel {
     return data;
   }
 
-  // 清理过期的令牌
+  // 清理过期的令牌 - 使用管理员权限
   static async cleanupExpiredTokens(): Promise<number> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('user_tokens')
       .delete()
       .lt('expires_at', new Date().toISOString())
@@ -177,9 +182,9 @@ export class TokenModel {
     return data?.length || 0;
   }
 
-  // 清理被撤销的令牌
+  // 清理被撤销的令牌 - 使用管理员权限
   static async cleanupRevokedTokens(): Promise<number> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('user_tokens')
       .delete()
       .eq('is_revoked', true)
@@ -226,9 +231,9 @@ export class TokenModel {
     return data || [];
   }
 
-  // 更新令牌设备信息
+  // 更新令牌设备信息 - 使用管理员权限
   static async updateDeviceInfo(tokenId: string, deviceInfo: Record<string, any>): Promise<UserToken> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('user_tokens')
       .update({
         device_info: deviceInfo

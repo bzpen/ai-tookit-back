@@ -6,6 +6,11 @@ export class LogModel {
     return DatabaseConfig.supabase;
   }
 
+  // 管理员客户端，用于绕过RLS策略
+  private static get adminClient() {
+    return DatabaseConfig.admin;
+  }
+
   // 解析时间范围的辅助函数
   private static parseTimeRange(timeRange: string): Date {
     const timeAgo = new Date();
@@ -32,9 +37,9 @@ export class LogModel {
     return timeAgo;
   }
 
-  // 创建登录日志记录
+  // 创建登录日志记录 - 使用管理员权限
   static async create(logData: LoginLogInsert): Promise<LoginLog> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('login_logs')
       .insert({
         ...logData,
@@ -298,12 +303,12 @@ export class LogModel {
     };
   }
 
-  // 清理旧的登录日志
+  // 清理旧的登录日志 - 使用管理员权限
   static async cleanupOldLogs(daysToKeep: number = 90): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('login_logs')
       .delete()
       .lt('login_at', cutoffDate.toISOString())

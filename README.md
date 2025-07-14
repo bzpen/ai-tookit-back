@@ -1,195 +1,158 @@
-# 基于 Replicate 的 AI 工具后台项目
+# Test-Back API 服务
 
-一个基于 Node.js + Express + TypeScript 的 AI 工具后端服务，集成 Replicate API，提供用户积分系统和图片处理功能。
+Node.js + Express + TypeScript + Supabase 后端API服务
 
-## 技术栈
+## 快速开始
 
-- **后端框架**: Node.js + Express + TypeScript
-- **数据库**: Supabase (PostgreSQL) 云数据库
-- **认证**: Google OAuth 2.0 + JWT Token
-- **图片存储**: Cloudflare R2
-- **部署**: Render
-- **包管理**: pnpm
+### 环境配置
 
-## 功能特性
+复制环境变量示例：
+```bash
+cp .env.example .env
+```
 
-- 🔐 用户认证与授权
-- 💰 积分系统（充值、扣费、冻结）
-- 🤖 Replicate AI API 集成
-- 📸 图片上传与管理
-- 🔄 定时任务（文件清理）
-- 📊 API 限流与监控
-- 📝 结构化日志
+配置必要的环境变量：
+```bash
+# Supabase 配置
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # 重要：用于绕过RLS
+
+# JWT 配置
+JWT_SECRET=your-jwt-secret
+
+# Google OAuth 配置
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+### 安装依赖
+
+```bash
+pnpm install
+```
+
+### 数据库初始化
+
+```bash
+pnpm run db:init
+```
+
+### 启动开发服务器
+
+```bash
+pnpm run dev
+```
+
+## 重要更新：RLS 策略修复
+
+### 问题描述
+之前遇到 `new row violates row-level security policy for table "users"` 错误，这是由于 Supabase 的 Row-Level Security (RLS) 策略限制了匿名key的写入权限。
+
+### 解决方案
+✅ **已实现服务端key方案**
+
+- 配置了双客户端架构：匿名key用于读取，服务端key用于写入
+- 修改了所有写操作使用管理员权限绕过RLS策略
+- 确保用户注册、登录、令牌管理等功能正常工作
+
+### 修改的文件
+- `src/config/database.config.ts` - 添加管理员客户端
+- `src/models/user.model.ts` - 用户相关写操作使用管理员权限
+- `src/models/token.model.ts` - 令牌相关写操作使用管理员权限  
+- `src/models/log.model.ts` - 日志相关写操作使用管理员权限
+
+详细说明请参考：[RLS修复指南](./docs/RLS_FIX_GUIDE.md)
 
 ## 项目结构
 
 ```
 src/
-├── controllers/     # 控制器层 - HTTP请求处理
-├── services/       # 服务层 - 业务逻辑
-├── models/         # 数据访问层 - 数据库操作
-├── middleware/     # 中间件层 - 请求预处理
-├── routes/         # 路由层 - API路由定义
-├── utils/          # 工具层 - 通用工具函数
-├── config/         # 配置层 - 环境配置
-├── jobs/           # 定时任务层 - 后台任务
-└── types/          # 类型定义层 - TypeScript类型
-```
-
-## 快速开始
-
-### 环境要求
-
-- Node.js >= 18.0.0
-- npm >= 8.0.0
-
-### 安装依赖
-
-```bash
-npm install
-```
-
-### 环境配置
-
-1. 复制环境变量文件
-
-```bash
-cp .env.example .env
-```
-
-2. 配置必要的环境变量
-
-```bash
-# 必须配置
-REPLICATE_API_TOKEN=your-replicate-api-token
-JWT_SECRET=your-super-secret-jwt-key
-
-# R2存储配置
-R2_ACCOUNT_ID=your-account-id
-R2_ACCESS_KEY_ID=your-access-key
-R2_SECRET_ACCESS_KEY=your-secret-key
-R2_BUCKET_NAME=your-bucket-name
-```
-
-### 运行项目
-
-```bash
-# 开发模式
-npm run dev
-
-# 构建项目
-npm run build
-
-# 生产模式
-npm start
-```
-
-### 使用 Docker
-
-```bash
-# 启动开发环境
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f app
-
-# 停止服务
-docker-compose down
+├── config/         # 配置文件
+├── controllers/    # 控制器层
+├── middleware/     # 中间件
+├── models/         # 数据模型
+├── routes/         # 路由定义
+├── services/       # 业务逻辑
+├── types/          # TypeScript类型
+└── utils/          # 工具函数
 ```
 
 ## API 文档
 
-项目启动后访问：http://localhost:3000/api/v1/docs
-
-## 主要 API 端点
-
 ### 认证相关
+- `GET /api/v1/auth/google` - Google OAuth登录
+- `POST /api/v1/auth/refresh` - 刷新访问令牌
+- `POST /api/v1/auth/logout` - 退出登录
 
-- `POST /api/v1/auth/register` - 用户注册
-- `POST /api/v1/auth/login` - 用户登录
-- `POST /api/v1/auth/refresh` - 刷新 Token
-
-### 用户管理
-
-- `GET /api/v1/users/profile` - 获取用户信息
-- `PUT /api/v1/users/profile` - 更新用户信息
-
-### 积分系统
-
-- `GET /api/v1/credits/balance` - 获取积分余额
-- `POST /api/v1/credits/recharge` - 积分充值
-- `GET /api/v1/credits/transactions` - 交易记录
-
-### AI 工具
-
-- `POST /api/v1/replicate/predict` - 创建 AI 预测
-- `GET /api/v1/replicate/status/:id` - 查询预测状态
-
-### 图片管理
-
-- `POST /api/v1/images/upload` - 上传图片
-- `GET /api/v1/images/:id` - 获取图片信息
-- `DELETE /api/v1/images/:id` - 删除图片
-
-## 开发规范
-
-### 代码风格
-
-- 使用 TypeScript 严格模式
-- 遵循 ESLint 规则
-- 使用 Prettier 格式化代码
-
-### 命名规范
-
-- 文件名：`user.service.ts`
-- 类名：`UserService`
-- 函数名：`getUserById`
-- 常量：`MAX_FILE_SIZE`
-
-### 提交规范
-
-- feat: 新功能
-- fix: 修复 bug
-- docs: 文档更新
-- refactor: 重构代码
-- test: 测试相关
-
-## 测试
-
-```bash
-# 运行测试
-npm test
-
-# 监听模式
-npm run test:watch
-```
+### 健康检查
+- `GET /api/health` - 服务健康检查
+- `GET /api/health/db` - 数据库健康检查
 
 ## 部署
 
-### Render 部署
+### 使用 Docker
 
-1. 连接 GitHub 仓库到 Render
-2. 设置构建命令：`pnpm install && pnpm run build`
-3. 设置启动命令：`pnpm start`
-4. 配置环境变量
-5. 自动部署
+```bash
+docker-compose up -d
+```
 
-详细部署指南请参考：[Render 部署指南](./docs/RENDER_DEPLOYMENT.md)
+### 手动部署
 
-## 监控与日志
+```bash
+pnpm run build
+pnpm start
+```
 
-- 应用日志：`./logs/app.log`
-- 错误追踪：集成日志系统
-- 性能监控：API 响应时间统计
+## 开发命令
+
+```bash
+# 开发模式
+pnpm run dev
+
+# 类型检查
+pnpm run type-check
+
+# 代码格式化
+pnpm run format
+
+# 运行测试
+pnpm test
+
+# 数据库操作
+pnpm run db:init     # 初始化数据库
+pnpm run db:migrate  # 运行迁移
+pnpm run db:health   # 健康检查
+```
+
+## 环境变量说明
+
+| 变量名 | 描述 | 必需 |
+|--------|------|------|
+| `SUPABASE_URL` | Supabase项目URL | ✅ |
+| `SUPABASE_ANON_KEY` | Supabase匿名key | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase服务端key | ✅ |
+| `JWT_SECRET` | JWT签名密钥 | ✅ |
+| `GOOGLE_CLIENT_ID` | Google OAuth客户端ID | ✅ |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth客户端密钥 | ✅ |
+
+## 技术栈
+
+- **运行时**: Node.js 18+
+- **框架**: Express.js
+- **语言**: TypeScript
+- **数据库**: Supabase (PostgreSQL)
+- **认证**: JWT + Google OAuth
+- **包管理**: pnpm
+
+## 贡献指南
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
 
 ## 许可证
 
 MIT License
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建特性分支
-3. 提交更改
-4. 推送到分支
-5. 提交 Pull Request

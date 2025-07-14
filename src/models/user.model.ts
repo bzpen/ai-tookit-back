@@ -6,9 +6,14 @@ export class UserModel {
     return DatabaseConfig.supabase;
   }
 
-  // 创建用户
+  // 管理员客户端，用于绕过RLS策略
+  private static get adminClient() {
+    return DatabaseConfig.admin;
+  }
+
+  // 创建用户 - 使用管理员权限绕过RLS
   static async create(userData: UserInsert): Promise<User> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .insert({
         ...userData,
@@ -79,9 +84,9 @@ export class UserModel {
     return data;
   }
 
-  // 更新用户信息
+  // 更新用户信息 - 使用管理员权限
   static async update(id: string, userData: UserUpdate): Promise<User> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .update({
         ...userData,
@@ -98,9 +103,9 @@ export class UserModel {
     return data;
   }
 
-  // 更新最后登录时间
+  // 更新最后登录时间 - 使用管理员权限
   static async updateLastLogin(id: string): Promise<User> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .update({
         last_login_at: new Date().toISOString(),
@@ -117,9 +122,9 @@ export class UserModel {
     return data;
   }
 
-  // 更新用户状态
+  // 更新用户状态 - 使用管理员权限
   static async updateStatus(id: string, status: UserStatus): Promise<User> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .update({
         status,
@@ -136,9 +141,9 @@ export class UserModel {
     return data;
   }
 
-  // 验证用户邮箱
+  // 验证用户邮箱 - 使用管理员权限
   static async verifyEmail(id: string): Promise<User> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .update({
         email_verified: true,
@@ -155,9 +160,9 @@ export class UserModel {
     return data;
   }
 
-  // 更新用户偏好设置
+  // 更新用户偏好设置 - 使用管理员权限
   static async updatePreferences(id: string, preferences: Record<string, any>): Promise<User> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .update({
         preferences,
@@ -174,9 +179,9 @@ export class UserModel {
     return data;
   }
 
-  // 删除用户（软删除，修改状态为 inactive）
+  // 删除用户（软删除，修改状态为 inactive）- 使用管理员权限
   static async softDelete(id: string): Promise<User> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .update({
         status: 'inactive' as UserStatus,

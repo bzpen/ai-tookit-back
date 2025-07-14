@@ -1,6 +1,10 @@
+import dotenv from 'dotenv';
 import { Database } from '../src/models/database';
 import fs from 'fs';
 import path from 'path';
+
+// 加载环境变量
+dotenv.config();
 
 const SQL_SCRIPT_PATH = path.join(__dirname, 'create_database_tables.sql');
 
@@ -9,11 +13,30 @@ async function initializeDatabase() {
     console.log('🚀 开始初始化数据库...');
 
     // 检查环境变量
-    const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+    const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'];
+    const missingVars: string[] = [];
+    
     for (const envVar of requiredEnvVars) {
       if (!process.env[envVar]) {
-        throw new Error(`缺少环境变量: ${envVar}`);
+        missingVars.push(envVar);
       }
+    }
+    
+    if (missingVars.length > 0) {
+      console.error('❌ 缺少必需的环境变量:');
+      missingVars.forEach(varName => {
+        console.error(`   - ${varName}`);
+      });
+      console.error('\n📋 请按照以下步骤配置环境变量:');
+      console.error('1. 复制 .env.example 文件为 .env');
+      console.error('2. 登录 Supabase Dashboard: https://app.supabase.com');
+      console.error('3. 选择您的项目 > Settings > API');
+      console.error('4. 复制 Project URL 和 API keys:');
+      console.error('   - SUPABASE_URL: Project URL');
+      console.error('   - SUPABASE_ANON_KEY: anon public key');
+      console.error('   - SUPABASE_SERVICE_ROLE_KEY: service_role secret key');
+      console.error('\n⚠️  注意: service_role key 拥有完全数据库访问权限，请妥善保管！');
+      throw new Error(`缺少环境变量: ${missingVars.join(', ')}`);
     }
 
     // 初始化数据库连接
@@ -70,10 +93,14 @@ async function initializeDatabase() {
   } catch (error) {
     console.error('❌ 数据库初始化失败:', error);
     console.error('\n🔧 故障排除建议:');
-    console.error('1. 检查环境变量是否正确配置');
+    console.error('1. 检查环境变量是否正确配置 (.env 文件)');
     console.error('2. 确认 Supabase 项目是否正常运行');
-    console.error('3. 检查网络连接是否正常');
-    console.error('4. 验证 Supabase API 密钥是否有效');
+    console.error('3. 验证 SUPABASE_SERVICE_ROLE_KEY 是否正确');
+    console.error('4. 检查网络连接是否正常');
+    console.error('5. 如果遇到 RLS 错误，确保使用了 service_role key');
+    console.error('\n📚 相关文档:');
+    console.error('- RLS 修复指南: ./docs/RLS_FIX_GUIDE.md');
+    console.error('- Supabase 文档: https://supabase.com/docs');
     process.exit(1);
   } finally {
     await Database.close();
