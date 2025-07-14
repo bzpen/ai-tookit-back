@@ -50,7 +50,7 @@ export class UserModel {
 
   // 根据Google ID获取用户
   static async findByGoogleId(googleId: string): Promise<User | null> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .select('*')
       .eq('google_id', googleId)
@@ -68,7 +68,7 @@ export class UserModel {
 
   // 根据邮箱获取用户
   static async findByEmail(email: string): Promise<User | null> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.adminClient
       .from('users')
       .select('*')
       .eq('email', email)
