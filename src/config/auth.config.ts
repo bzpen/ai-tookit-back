@@ -82,7 +82,11 @@ export const rateLimitConfig = {
  * CORS 配置
  */
 export const corsConfig = {
-  origin: process.env["CORS_ORIGIN"]?.split(",") || ["http://localhost:3000"],
+  origin: process.env["CORS_ORIGIN"]?.split(",") || [
+    "http://localhost:3000",
+    "https://ai-toolkit.org",
+    "https://www.ai-toolkit.org",
+  ],
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
