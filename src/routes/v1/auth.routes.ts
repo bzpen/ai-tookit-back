@@ -4,22 +4,7 @@ import { verifyToken, optionalAuth } from "../../middleware/auth.middleware";
 
 const router = Router();
 
-/**
- * CORS 预检请求处理
- * OPTIONS /api/v1/auth/*
- *
- * 处理跨域预检请求
- */
-router.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Requested-With"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.status(200).end();
-});
+// CORS预检请求由全局中间件处理，无需在此重复配置
 
 /**
  * Google OAuth 登录路由

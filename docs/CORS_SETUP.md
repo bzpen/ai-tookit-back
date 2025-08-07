@@ -1,153 +1,76 @@
-# CORS 配置说明
+# CORS 配置指南
 
 ## 概述
 
-本项目已配置支持多个域名的 CORS (跨域资源共享)，包括 `https://ai-toolkit.org/` 域名。
+本项目已配置支持多域名 CORS 访问，支持以下域名：
 
-## 当前配置
-
-### 默认支持的域名
-
-- `http://localhost:3000` (开发环境)
-- `https://ai-toolkit.org` (生产环境)
-- `https://www.ai-toolkit.org` (生产环境)
-
-### 配置位置
-
-1. **主应用配置**: `src/config/app.config.ts`
-2. **认证配置**: `src/config/auth.config.ts`
+- `https://www.ai-toolkit.org`
+- `http://localhost:3001`
+- `https://ai-toolkit.org`
 
 ## 环境变量配置
 
-### 方法一：使用环境变量
-
 在 `.env` 文件中设置：
 
-```bash
-# 支持多个域名，用逗号分隔
-CORS_ORIGIN=http://localhost:3000,https://ai-toolkit.org,https://www.ai-toolkit.org
+```env
+CORS_ORIGIN=https://www.ai-toolkit.org,http://localhost:3001,https://ai-toolkit.org
 ```
 
-### 方法二：直接修改代码
+## 配置说明
 
-如果不想使用环境变量，可以直接修改配置文件中的默认值。
+### 支持的请求头
 
-## CORS 配置详情
+- `Content-Type`
+- `Authorization`
+- `X-Requested-With`
 
-```typescript
-cors: {
-  origin: ['http://localhost:3000', 'https://ai-toolkit.org', 'https://www.ai-toolkit.org'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}
-```
+### 支持的 HTTP 方法
 
-## 支持的请求方法
+- `GET`
+- `POST`
+- `PUT`
+- `DELETE`
+- `OPTIONS`
 
-- GET
-- POST
-- PUT
-- DELETE
-- OPTIONS (预检请求)
+### 凭证支持
 
-## 支持的请求头
+- `credentials: true` - 支持携带 cookies 和认证信息
 
-- Content-Type
-- Authorization
-- X-Requested-With
+## 故障排除
 
-## 启用凭据
+### 1. 检查环境变量
 
-`credentials: true` 允许跨域请求携带 cookies 和认证信息。
+确保 `CORS_ORIGIN` 环境变量正确设置，多个域名用逗号分隔。
 
-## 测试 CORS 配置
+### 2. 检查域名格式
 
-### 1. 使用 curl 测试
+- 确保包含协议（http:// 或 https://）
+- 确保域名拼写正确
+- 注意端口号（如 localhost:3001）
 
-```bash
-# 测试预检请求
-curl -X OPTIONS \
-  -H "Origin: https://ai-toolkit.org" \
-  -H "Access-Control-Request-Method: POST" \
-  -H "Access-Control-Request-Headers: Content-Type,Authorization" \
-  http://localhost:3000/api/v1/auth/me
+### 3. 检查请求头
 
-# 测试实际请求
-curl -X GET \
-  -H "Origin: https://ai-toolkit.org" \
-  -H "Authorization: Bearer your_token" \
-  http://localhost:3000/api/v1/auth/me
-```
+确保前端请求包含正确的 `Origin` 头。
 
-### 2. 使用浏览器开发者工具
+### 4. 日志调试
 
-在浏览器控制台中测试：
-
-```javascript
-fetch("http://localhost:3000/api/v1/auth/me", {
-  method: "GET",
-  headers: {
-    Authorization: "Bearer your_token",
-    "Content-Type": "application/json",
-  },
-  credentials: "include",
-})
-  .then((response) => response.json())
-  .then((data) => console.log(data))
-  .catch((error) => console.error("CORS Error:", error));
-```
-
-## 常见问题解决
-
-### 1. 跨域错误仍然存在
-
-检查以下几点：
-
-1. **域名格式**: 确保域名格式正确，包含协议 (http:// 或 https://)
-2. **端口号**: 如果使用非标准端口，需要明确指定
-3. **子域名**: 如果需要支持子域名，需要单独添加
-
-### 2. 预检请求失败
-
-确保服务器正确处理 OPTIONS 请求：
-
-```typescript
-// 在路由中添加 OPTIONS 处理
-app.options("*", cors()); // 处理所有预检请求
-```
-
-### 3. 凭据问题
-
-如果使用 `credentials: 'include'`，确保：
-
-1. CORS 配置中 `credentials: true`
-2. 域名完全匹配（不能使用通配符 `*`）
-
-## 生产环境建议
-
-1. **限制域名**: 只允许必要的域名
-2. **HTTPS**: 生产环境使用 HTTPS
-3. **监控**: 监控 CORS 错误日志
-4. **安全**: 定期审查允许的域名列表
-
-## 添加新域名
-
-要添加新的域名支持，修改以下文件：
-
-1. `src/config/app.config.ts`
-2. `src/config/auth.config.ts`
-
-或者设置环境变量：
+服务器会记录被 CORS 阻止的请求，查看日志：
 
 ```bash
-CORS_ORIGIN=http://localhost:3000,https://ai-toolkit.org,https://your-new-domain.com
+npm run dev
 ```
 
-## 重启服务
+## 开发环境配置
 
-修改 CORS 配置后，需要重启服务器使配置生效：
+本地开发时，可以添加更多域名：
 
-```bash
-pnpm dev
+```env
+CORS_ORIGIN=https://www.ai-toolkit.org,http://localhost:3001,https://ai-toolkit.org,http://localhost:3000
 ```
+
+## 生产环境注意事项
+
+1. 只允许必要的域名
+2. 使用 HTTPS 协议
+3. 定期审查允许的域名列表
+4. 监控 CORS 错误日志

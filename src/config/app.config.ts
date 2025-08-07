@@ -7,7 +7,9 @@ export const AppConfig = {
   port: parseInt(process.env["PORT"] || "3000", 10),
   env: process.env["NODE_ENV"] || "development",
   cors: {
-    origin: process.env["CORS_ORIGIN"] || "http://localhost:3000",
+    origin: process.env["CORS_ORIGIN"]
+      ? process.env["CORS_ORIGIN"].split(",").map((origin) => origin.trim())
+      : ["http://localhost:3000"],
     credentials: true,
   },
   rateLimit: {
