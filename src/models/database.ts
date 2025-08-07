@@ -1,7 +1,7 @@
-import { DatabaseConfig } from '../config/database.config';
-import { UserModel } from './user.model';
-import { TokenModel } from './token.model';
-import { LogModel } from './log.model';
+import { DatabaseConfig } from "../config/database.config";
+import { UserModel } from "./user.model";
+import { TokenModel } from "./token.model";
+import { LogModel } from "./log.model";
 
 export class Database {
   // 初始化数据库连接
@@ -28,17 +28,17 @@ export class Database {
     try {
       const [expiredTokens, revokedTokens, oldLogs] = await Promise.all([
         TokenModel.cleanupExpiredTokens(),
-        TokenModel.cleanupRevokedTokens(), 
-        LogModel.cleanupOldLogs()
+        TokenModel.cleanupRevokedTokens(),
+        LogModel.cleanupOldLogs(),
       ]);
 
       return {
         expiredTokens,
         revokedTokens,
-        oldLogs
+        oldLogs,
       };
     } catch (error) {
-      console.error('数据库清理失败:', error);
+      console.error("数据库清理失败:", error);
       throw error;
     }
   }
@@ -68,15 +68,15 @@ export class Database {
       const [usersResult, tokensResult, logsResult] = await Promise.all([
         UserModel.findAll(1, 1000),
         TokenModel.getTokenStats(),
-        LogModel.getSystemLoginStats('24 hours')
+        LogModel.getSystemLoginStats("24 hours"),
       ]);
 
       const users = usersResult.users;
       const userStats = {
         total: users.length,
-        active: users.filter(u => u.status === 'active').length,
-        inactive: users.filter(u => u.status === 'inactive').length,
-        suspended: users.filter(u => u.status === 'suspended').length
+        active: users.filter((u) => u.status === "active").length,
+        inactive: users.filter((u) => u.status === "inactive").length,
+        suspended: users.filter((u) => u.status === "suspended").length,
       };
 
       return {
@@ -86,11 +86,11 @@ export class Database {
           totalLogins: logsResult.totalLogins,
           successfulLogins: logsResult.successfulLogins,
           failedLogins: logsResult.failedLogins,
-          uniqueUsers: logsResult.uniqueUsers
-        }
+          uniqueUsers: logsResult.uniqueUsers,
+        },
       };
     } catch (error) {
-      console.error('获取数据库统计信息失败:', error);
+      console.error("获取数据库统计信息失败:", error);
       throw error;
     }
   }
@@ -104,15 +104,15 @@ export class Database {
   }> {
     try {
       const stats = await this.getStats();
-      
+
       return {
         timestamp: new Date().toISOString(),
         users: stats.users.total,
         tokens: stats.tokens.total,
-        logs: stats.loginLogs.totalLogins
+        logs: stats.loginLogs.totalLogins,
       };
     } catch (error) {
-      console.error('数据库备份失败:', error);
+      console.error("数据库备份失败:", error);
       throw error;
     }
   }
@@ -124,31 +124,28 @@ export class Database {
   }> {
     try {
       const healthy = await this.healthCheck();
-      
+
       if (healthy) {
         return {
           tablesExist: true,
-          message: '数据库表结构正常'
+          message: "数据库表结构正常",
         };
       } else {
         return {
           tablesExist: false,
-          message: '数据库表结构不存在，请运行 SQL 脚本创建表'
+          message: "数据库表结构不存在，请运行 SQL 脚本创建表",
         };
       }
     } catch (error) {
       return {
         tablesExist: false,
-        message: `数据库检查失败: ${error instanceof Error ? error.message : '未知错误'}`
+        message: `数据库检查失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`,
       };
     }
   }
 }
 
 // 导出所有模型
-export {
-  UserModel,
-  TokenModel,
-  LogModel,
-  DatabaseConfig
-}; 
+export { UserModel, TokenModel, LogModel, DatabaseConfig };

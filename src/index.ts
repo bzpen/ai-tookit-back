@@ -1,3 +1,6 @@
+// 注册模块别名（必须在其他导入之前）
+import "module-alias/register";
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";

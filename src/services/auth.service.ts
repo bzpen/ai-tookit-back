@@ -1,12 +1,17 @@
-import * as jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import { UserModel } from '@/models/user.model';
-import { TokenModel } from '@/models/token.model';
-import { LogModel } from '@/models/log.model';
-import { authConfig } from '@/config/auth.config';
-import { LoggerUtil } from '@/utils/logger.util';
-import type { User, UserInsert, TokenType, LoginLogInsert } from '@/types/database.types';
-import type { JwtPayload as JWTPayload } from 'jsonwebtoken';
+import * as jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { UserModel } from "@/models/user.model";
+import { TokenModel } from "@/models/token.model";
+import { LogModel } from "@/models/log.model";
+import { authConfig } from "@/config/auth.config";
+import { LoggerUtil } from "@/utils/logger.util";
+import type {
+  User,
+  UserInsert,
+  TokenType,
+  LoginLogInsert,
+} from "@/types/database.types";
+import type { JwtPayload as JWTPayload } from "jsonwebtoken";
 
 // 扩展的Google Profile类型，匹配Passport Google OAuth返回的数据
 interface GoogleOAuthProfile {
@@ -37,13 +42,16 @@ export class AuthService {
   /**
    * 处理Google OAuth登录/注册
    */
-  static async handleGoogleAuth(profile: GoogleOAuthProfile, _accessToken?: string): Promise<{
+  static async handleGoogleAuth(
+    profile: GoogleOAuthProfile,
+    _accessToken?: string
+  ): Promise<{
     user: User;
     tokens: AuthTokens;
     isNewUser: boolean;
   }> {
     try {
-      LoggerUtil.info('开始处理Google OAuth认证', { googleId: profile.id });
+      LoggerUtil.info("开始处理Google OAuth认证", { googleId: profile.id });
 
       // 查找现有用户
       let user = await UserModel.findByGoogleId(profile.id);
@@ -53,38 +61,38 @@ export class AuthService {
         // 检查是否存在相同邮箱的用户
         const email = profile.emails?.[0]?.value;
         if (!email) {
-          throw new Error('Google账号缺少邮箱信息');
+          throw new Error("Google账号缺少邮箱信息");
         }
         const existingUser = await UserModel.findByEmail(email);
-        
+
         if (existingUser) {
           // 更新现有用户的Google ID
           user = await UserModel.update(existingUser.id, {
             google_id: profile.id,
-            avatar_url: profile.photos?.[0]?.value || null
+            avatar_url: profile.photos?.[0]?.value || null,
           });
-          LoggerUtil.info('关联Google账号到现有用户', { userId: user.id });
+          LoggerUtil.info("关联Google账号到现有用户", { userId: user.id });
         } else {
           // 创建新用户
           const userData: UserInsert = {
             google_id: profile.id,
-            email: profile.emails?.[0]?.value || '',
+            email: profile.emails?.[0]?.value || "",
             name: profile.displayName,
             avatar_url: profile.photos?.[0]?.value || null,
             email_verified: profile.emails?.[0]?.verified || false,
-            status: 'active',
-            preferences: {}
+            status: "active",
+            preferences: {},
           };
 
           user = await UserModel.create(userData);
           isNewUser = true;
-          LoggerUtil.info('创建新用户', { userId: user.id });
+          LoggerUtil.info("创建新用户", { userId: user.id });
         }
       } else {
         // 更新现有用户信息
         user = await UserModel.update(user.id, {
           name: profile.displayName,
-          avatar_url: profile.photos?.[0]?.value || null
+          avatar_url: profile.photos?.[0]?.value || null,
         });
       }
 
@@ -97,27 +105,26 @@ export class AuthService {
       // 记录登录日志
       const logData: LoginLogInsert = {
         user_id: user.id,
-        login_method: 'google',
+        login_method: "google",
         success: true,
         ip_address: null,
         user_agent: null,
         location: {
-          provider: 'google',
-          isNewUser
-        }
+          provider: "google",
+          isNewUser,
+        },
       };
       await LogModel.create(logData);
 
-      LoggerUtil.info('Google OAuth认证成功', { 
-        userId: user.id, 
-        isNewUser 
+      LoggerUtil.info("Google OAuth认证成功", {
+        userId: user.id,
+        isNewUser,
       });
 
       return { user, tokens, isNewUser };
-
     } catch (error) {
-      LoggerUtil.error('Google OAuth认证失败', error);
-      throw new Error('认证失败，请重试');
+      LoggerUtil.error("Google OAuth认证失败", error);
+      throw new Error("认证失败，请重试");
     }
   }
 
@@ -130,14 +137,11 @@ export class AuthService {
         userId: user.id,
         email: user.email,
         username: user.name,
-        role: 'user'
+        role: "user",
       };
 
       // 生成访问令牌
-      const accessToken = jwt.sign(
-        jwtPayload,
-        authConfig.jwt.secret as string
-      );
+      const accessToken = jwt.sign(jwtPayload, authConfig.jwt.secret as string);
 
       // 生成刷新令牌
       const refreshToken = this.generateSecureToken();
@@ -145,27 +149,30 @@ export class AuthService {
 
       // 计算过期时间
       const expiresAt = new Date();
-      expiresAt.setTime(expiresAt.getTime() + this.parseExpiry(authConfig.jwt.refreshExpiresIn));
+      expiresAt.setTime(
+        expiresAt.getTime() + this.parseExpiry(authConfig.jwt.refreshExpiresIn)
+      );
 
       // 存储刷新令牌
       await TokenModel.create({
         user_id: user.id,
         token_hash: refreshTokenHash,
-        token_type: 'refresh' as TokenType,
+        token_type: "refresh" as TokenType,
         expires_at: expiresAt.toISOString(),
-        device_info: {}
+        device_info: {},
       });
 
       return {
         accessToken,
         refreshToken,
-        accessTokenExpiresAt: new Date(Date.now() + this.parseExpiry(authConfig.jwt.expiresIn)),
-        refreshTokenExpiresAt: expiresAt
+        accessTokenExpiresAt: new Date(
+          Date.now() + this.parseExpiry(authConfig.jwt.expiresIn)
+        ),
+        refreshTokenExpiresAt: expiresAt,
       };
-
     } catch (error) {
-      LoggerUtil.error('生成令牌失败', error);
-      throw new Error('令牌生成失败');
+      LoggerUtil.error("生成令牌失败", error);
+      throw new Error("令牌生成失败");
     }
   }
 
@@ -176,17 +183,17 @@ export class AuthService {
     try {
       const decoded = jwt.verify(token, authConfig.jwt.secret, {
         issuer: authConfig.jwt.issuer,
-        audience: authConfig.jwt.audience
+        audience: authConfig.jwt.audience,
       }) as JWTPayload;
 
       return decoded;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new Error('访问令牌已过期');
+        throw new Error("访问令牌已过期");
       } else if (error instanceof jwt.JsonWebTokenError) {
-        throw new Error('无效的访问令牌');
+        throw new Error("无效的访问令牌");
       }
-      throw new Error('令牌验证失败');
+      throw new Error("令牌验证失败");
     }
   }
 
@@ -198,15 +205,15 @@ export class AuthService {
       // 查找并验证刷新令牌
       const tokenHash = this.hashToken(refreshToken);
       const tokenRecord = await TokenModel.validateToken(tokenHash);
-      
+
       if (!tokenRecord) {
-        throw new Error('无效的刷新令牌');
+        throw new Error("无效的刷新令牌");
       }
 
       // 获取用户信息
       const user = await UserModel.findById(tokenRecord.user_id);
       if (!user) {
-        throw new Error('用户不存在');
+        throw new Error("用户不存在");
       }
 
       // 删除旧的刷新令牌
@@ -218,18 +225,17 @@ export class AuthService {
       // 记录令牌刷新日志
       const logData: LoginLogInsert = {
         user_id: user.id,
-        login_method: 'token_refresh',
+        login_method: "token_refresh",
         success: true,
         ip_address: null,
-        user_agent: null
+        user_agent: null,
       };
       await LogModel.create(logData);
 
-      LoggerUtil.info('令牌刷新成功', { userId: user.id });
+      LoggerUtil.info("令牌刷新成功", { userId: user.id });
       return tokens;
-
     } catch (error) {
-      LoggerUtil.error('令牌刷新失败', error);
+      LoggerUtil.error("令牌刷新失败", error);
       throw error;
     }
   }
@@ -241,9 +247,9 @@ export class AuthService {
     try {
       const tokenHash = this.hashToken(refreshToken);
       await TokenModel.revokeByTokenHash(tokenHash);
-      LoggerUtil.info('刷新令牌已撤销');
+      LoggerUtil.info("刷新令牌已撤销");
     } catch (error) {
-      LoggerUtil.error('撤销令牌失败', error);
+      LoggerUtil.error("撤销令牌失败", error);
       throw error;
     }
   }
@@ -258,16 +264,16 @@ export class AuthService {
       // 记录注销日志
       const logData: LoginLogInsert = {
         user_id: userId,
-        login_method: 'google',
+        login_method: "google",
         success: true,
         ip_address: null,
-        user_agent: null
+        user_agent: null,
       };
       await LogModel.create(logData);
 
-      LoggerUtil.info('用户所有令牌已撤销', { userId });
+      LoggerUtil.info("用户所有令牌已撤销", { userId });
     } catch (error) {
-      LoggerUtil.error('撤销所有令牌失败', error);
+      LoggerUtil.error("撤销所有令牌失败", error);
       throw error;
     }
   }
@@ -279,19 +285,19 @@ export class AuthService {
     try {
       const decoded = await this.verifyAccessToken(accessToken);
       const userId = (decoded as any).userId || decoded.sub;
-      
+
       if (!userId) {
-        throw new Error('令牌中缺少用户ID');
+        throw new Error("令牌中缺少用户ID");
       }
 
       const user = await UserModel.findById(userId);
       if (!user) {
-        throw new Error('用户不存在');
+        throw new Error("用户不存在");
       }
 
       return user;
     } catch (error) {
-      LoggerUtil.error('获取当前用户失败', error);
+      LoggerUtil.error("获取当前用户失败", error);
       throw error;
     }
   }
@@ -300,17 +306,14 @@ export class AuthService {
    * 生成安全的随机令牌
    */
   private static generateSecureToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString("hex");
   }
 
   /**
    * 对令牌进行哈希处理
    */
   private static hashToken(token: string): string {
-    return crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    return crypto.createHash("sha256").update(token).digest("hex");
   }
 
   /**
@@ -321,11 +324,16 @@ export class AuthService {
     const value = parseInt(expiry.slice(0, -1));
 
     switch (unit) {
-      case 's': return value * 1000;
-      case 'm': return value * 60 * 1000;
-      case 'h': return value * 60 * 60 * 1000;
-      case 'd': return value * 24 * 60 * 60 * 1000;
-      default: throw new Error(`无效的过期时间格式: ${expiry}`);
+      case "s":
+        return value * 1000;
+      case "m":
+        return value * 60 * 1000;
+      case "h":
+        return value * 60 * 60 * 1000;
+      case "d":
+        return value * 24 * 60 * 60 * 1000;
+      default:
+        throw new Error(`无效的过期时间格式: ${expiry}`);
     }
   }
 
@@ -335,10 +343,10 @@ export class AuthService {
   static async cleanupExpiredTokens(): Promise<number> {
     try {
       const count = await TokenModel.cleanupExpiredTokens();
-      LoggerUtil.info('清理过期令牌完成', { count });
+      LoggerUtil.info("清理过期令牌完成", { count });
       return count;
     } catch (error) {
-      LoggerUtil.error('清理过期令牌失败', error);
+      LoggerUtil.error("清理过期令牌失败", error);
       throw error;
     }
   }
@@ -346,15 +354,18 @@ export class AuthService {
   /**
    * 检查用户权限
    */
-  static async checkPermission(userId: string, permission: string): Promise<boolean> {
+  static async checkPermission(
+    userId: string,
+    permission: string
+  ): Promise<boolean> {
     try {
       const user = await UserModel.findById(userId);
       if (!user) return false;
 
       const userPermissions = (user.preferences as any)?.permissions || [];
-      return userPermissions.includes(permission) || user.status === 'active';
+      return userPermissions.includes(permission) || user.status === "active";
     } catch (error) {
-      LoggerUtil.error('权限检查失败', error);
+      LoggerUtil.error("权限检查失败", error);
       return false;
     }
   }
@@ -366,7 +377,7 @@ export class AuthService {
     try {
       await UserModel.updateLastLogin(userId);
     } catch (error) {
-      LoggerUtil.error('更新最后活动时间失败', error);
+      LoggerUtil.error("更新最后活动时间失败", error);
     }
   }
-} 
+}
