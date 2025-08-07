@@ -143,50 +143,13 @@ export class AuthController {
     try {
       const user = req.authUser;
 
-      // 调试日志：检查认证用户信息
-      LoggerUtil.info("getCurrentUser 调试信息", {
-        hasAuthUser: !!user,
-        authUserData: user
-          ? {
-              userId: user.userId,
-              email: user.email,
-              username: user.username,
-              role: user.role,
-            }
-          : null,
-        headers: {
-          authorization: req.headers.authorization ? "present" : "missing",
-          userAgent: req.get("User-Agent"),
-        },
-      });
-
       if (!user) {
         ResponseUtil.unauthorized(res, "用户未登录");
         return;
       }
 
-      // 调试日志：尝试从数据库获取用户信息
-      LoggerUtil.info("尝试从数据库获取用户信息", {
-        userId: user.userId,
-        email: user.email,
-      });
-
       // 从数据库获取完整的用户信息
       const fullUser = await UserService.getUserById(user.userId);
-
-      // 调试日志：数据库查询结果
-      LoggerUtil.info("数据库查询结果", {
-        userId: user.userId,
-        foundUser: !!fullUser,
-        userData: fullUser
-          ? {
-              id: fullUser.id,
-              email: fullUser.email,
-              name: fullUser.name,
-              status: fullUser.status,
-            }
-          : null,
-      });
 
       if (!fullUser) {
         ResponseUtil.error(res, "用户信息不存在", 404);
@@ -206,13 +169,6 @@ export class AuthController {
         email_verified: fullUser.email_verified,
         preferences: fullUser.preferences,
       };
-
-      // 调试日志：成功返回用户信息
-      LoggerUtil.info("成功返回用户信息", {
-        userId: fullUser.id,
-        email: fullUser.email,
-        status: fullUser.status,
-      });
 
       ResponseUtil.success(
         res,

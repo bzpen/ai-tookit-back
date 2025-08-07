@@ -1,5 +1,10 @@
-import { DatabaseConfig } from '../config/database.config';
-import type { User, UserInsert, UserUpdate, UserStatus } from '@/types/database.types';
+import { DatabaseConfig } from "../config/database.config";
+import type {
+  User,
+  UserInsert,
+  UserUpdate,
+  UserStatus,
+} from "@/types/database.types";
 
 export class UserModel {
   private static get supabase() {
@@ -14,11 +19,11 @@ export class UserModel {
   // 创建用户 - 使用管理员权限绕过RLS
   static async create(userData: UserInsert): Promise<User> {
     const { data, error } = await this.adminClient
-      .from('users')
+      .from("users")
       .insert({
         ...userData,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -32,14 +37,14 @@ export class UserModel {
 
   // 根据ID获取用户
   static async findById(id: string): Promise<User | null> {
-    const { data, error } = await this.supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
+    const { data, error } = await this.adminClient
+      .from("users")
+      .select("*")
+      .eq("id", id)
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         return null; // 用户不存在
       }
       throw new Error(`查询用户失败: ${error.message}`);
@@ -51,13 +56,13 @@ export class UserModel {
   // 根据Google ID获取用户
   static async findByGoogleId(googleId: string): Promise<User | null> {
     const { data, error } = await this.adminClient
-      .from('users')
-      .select('*')
-      .eq('google_id', googleId)
+      .from("users")
+      .select("*")
+      .eq("google_id", googleId)
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         return null; // 用户不存在
       }
       throw new Error(`查询用户失败: ${error.message}`);
@@ -69,13 +74,13 @@ export class UserModel {
   // 根据邮箱获取用户
   static async findByEmail(email: string): Promise<User | null> {
     const { data, error } = await this.adminClient
-      .from('users')
-      .select('*')
-      .eq('email', email)
+      .from("users")
+      .select("*")
+      .eq("email", email)
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         return null; // 用户不存在
       }
       throw new Error(`查询用户失败: ${error.message}`);
@@ -87,12 +92,12 @@ export class UserModel {
   // 更新用户信息 - 使用管理员权限
   static async update(id: string, userData: UserUpdate): Promise<User> {
     const { data, error } = await this.adminClient
-      .from('users')
+      .from("users")
       .update({
         ...userData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -106,12 +111,12 @@ export class UserModel {
   // 更新最后登录时间 - 使用管理员权限
   static async updateLastLogin(id: string): Promise<User> {
     const { data, error } = await this.adminClient
-      .from('users')
+      .from("users")
       .update({
         last_login_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -125,12 +130,12 @@ export class UserModel {
   // 更新用户状态 - 使用管理员权限
   static async updateStatus(id: string, status: UserStatus): Promise<User> {
     const { data, error } = await this.adminClient
-      .from('users')
+      .from("users")
       .update({
         status,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -144,12 +149,12 @@ export class UserModel {
   // 验证用户邮箱 - 使用管理员权限
   static async verifyEmail(id: string): Promise<User> {
     const { data, error } = await this.adminClient
-      .from('users')
+      .from("users")
       .update({
         email_verified: true,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -161,14 +166,17 @@ export class UserModel {
   }
 
   // 更新用户偏好设置 - 使用管理员权限
-  static async updatePreferences(id: string, preferences: Record<string, any>): Promise<User> {
+  static async updatePreferences(
+    id: string,
+    preferences: Record<string, any>
+  ): Promise<User> {
     const { data, error } = await this.adminClient
-      .from('users')
+      .from("users")
       .update({
         preferences,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -182,12 +190,12 @@ export class UserModel {
   // 删除用户（软删除，修改状态为 inactive）- 使用管理员权限
   static async softDelete(id: string): Promise<User> {
     const { data, error } = await this.adminClient
-      .from('users')
+      .from("users")
       .update({
-        status: 'inactive' as UserStatus,
-        updated_at: new Date().toISOString()
+        status: "inactive" as UserStatus,
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -212,17 +220,17 @@ export class UserModel {
     page: number;
     limit: number;
   }> {
-    let query = this.supabase
-      .from('users')
-      .select('*', { count: 'exact' });
+    let query = this.supabase.from("users").select("*", { count: "exact" });
 
     // 应用过滤器
     if (filters?.status) {
-      query = query.eq('status', filters.status);
+      query = query.eq("status", filters.status);
     }
 
     if (filters?.search) {
-      query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+      query = query.or(
+        `name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`
+      );
     }
 
     // 分页
@@ -239,16 +247,16 @@ export class UserModel {
       users: data || [],
       total: count || 0,
       page,
-      limit
+      limit,
     };
   }
 
   // 检查用户是否存在
   static async exists(id: string): Promise<boolean> {
     const { data, error } = await this.supabase
-      .from('users')
-      .select('id')
-      .eq('id', id)
+      .from("users")
+      .select("id")
+      .eq("id", id)
       .single();
 
     return !error && !!data;
@@ -257,18 +265,18 @@ export class UserModel {
   // 根据 Google ID 创建或更新用户
   static async createOrUpdate(userData: UserInsert): Promise<User> {
     const existingUser = await this.findByGoogleId(userData.google_id);
-    
+
     if (existingUser) {
       // 更新现有用户信息
       return await this.update(existingUser.id, {
         name: userData.name,
         email: userData.email,
         avatar_url: userData.avatar_url || null,
-        last_login_at: new Date().toISOString()
+        last_login_at: new Date().toISOString(),
       });
     } else {
       // 创建新用户
       return await this.create(userData);
     }
   }
-} 
+}
