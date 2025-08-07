@@ -61,7 +61,7 @@ describe("Auth Routes Integration Tests", () => {
         .get("/api/v1/auth/google")
         .expect(302);
 
-      expect(response.headers.location).toContain("accounts.google.com");
+      expect(response.headers["location"]).toContain("accounts.google.com");
     });
   });
 
@@ -72,7 +72,7 @@ describe("Auth Routes Integration Tests", () => {
         .expect(302);
 
       // 应该重定向到错误页面或登录页面
-      expect(response.headers.location).toBeDefined();
+      expect(response.headers["location"]).toBeDefined();
     });
   });
 
@@ -88,15 +88,6 @@ describe("Auth Routes Integration Tests", () => {
     });
 
     it("应该返回当前用户信息（模拟认证）", async () => {
-      // 模拟已认证的请求
-      const mockUser = {
-        id: "test-user-id",
-        email: "test@example.com",
-        name: "Test User",
-        avatar_url: "https://example.com/avatar.jpg",
-        status: "active",
-      };
-
       // 这里需要模拟JWT令牌验证
       const mockToken = "mock-jwt-token";
 

@@ -1,7 +1,12 @@
-import { UserModel } from '@/models/user.model';
-import { LogModel } from '@/models/log.model';
-import { LoggerUtil } from '@/utils/logger.util';
-import type { User, UserUpdate, UserStatus, LoginLogInsert } from '@/types/database.types';
+import { UserModel } from "@/models/user.model";
+import { LogModel } from "@/models/log.model";
+import { LoggerUtil } from "@/utils/logger.util";
+import type {
+  User,
+  UserUpdate,
+  UserStatus,
+  LoginLogInsert,
+} from "@/types/database.types";
 
 export class UserService {
   /**
@@ -11,12 +16,12 @@ export class UserService {
     try {
       const user = await UserModel.findById(userId);
       if (user) {
-        LoggerUtil.info('获取用户信息成功', { userId });
+        LoggerUtil.info("获取用户信息成功", { userId });
       }
       return user;
     } catch (error) {
-      LoggerUtil.error('获取用户信息失败', error);
-      throw new Error('获取用户信息失败');
+      LoggerUtil.error("获取用户信息失败", error);
+      throw new Error("获取用户信息失败");
     }
   }
 
@@ -27,12 +32,12 @@ export class UserService {
     try {
       const user = await UserModel.findByEmail(email);
       if (user) {
-        LoggerUtil.info('根据邮箱获取用户信息成功', { email });
+        LoggerUtil.info("根据邮箱获取用户信息成功", { email });
       }
       return user;
     } catch (error) {
-      LoggerUtil.error('根据邮箱获取用户信息失败', error);
-      throw new Error('获取用户信息失败');
+      LoggerUtil.error("根据邮箱获取用户信息失败", error);
+      throw new Error("获取用户信息失败");
     }
   }
 
@@ -43,50 +48,56 @@ export class UserService {
     try {
       const user = await UserModel.findByGoogleId(googleId);
       if (user) {
-        LoggerUtil.info('根据Google ID获取用户信息成功', { googleId });
+        LoggerUtil.info("根据Google ID获取用户信息成功", { googleId });
       }
       return user;
     } catch (error) {
-      LoggerUtil.error('根据Google ID获取用户信息失败', error);
-      throw new Error('获取用户信息失败');
+      LoggerUtil.error("根据Google ID获取用户信息失败", error);
+      throw new Error("获取用户信息失败");
     }
   }
 
   /**
    * 更新用户信息
    */
-  static async updateUser(userId: string, updateData: UserUpdate): Promise<User> {
+  static async updateUser(
+    userId: string,
+    updateData: UserUpdate
+  ): Promise<User> {
     try {
       // 验证用户是否存在
       const existingUser = await UserModel.findById(userId);
       if (!existingUser) {
-        throw new Error('用户不存在');
+        throw new Error("用户不存在");
       }
 
       // 更新用户信息
       const updatedUser = await UserModel.update(userId, updateData);
 
-      LoggerUtil.info('更新用户信息成功', { 
-        userId, 
-        updatedFields: Object.keys(updateData)
+      LoggerUtil.info("更新用户信息成功", {
+        userId,
+        updatedFields: Object.keys(updateData),
       });
 
       return updatedUser;
     } catch (error) {
-      LoggerUtil.error('更新用户信息失败', error);
-      throw error instanceof Error ? error : new Error('更新用户信息失败');
+      LoggerUtil.error("更新用户信息失败", error);
+      throw error instanceof Error ? error : new Error("更新用户信息失败");
     }
   }
 
   /**
    * 更新用户状态
    */
-  static async updateUserStatus(userId: string, status: UserStatus): Promise<User> {
+  static async updateUserStatus(
+    userId: string,
+    status: UserStatus
+  ): Promise<User> {
     try {
       // 验证用户是否存在
       const existingUser = await UserModel.findById(userId);
       if (!existingUser) {
-        throw new Error('用户不存在');
+        throw new Error("用户不存在");
       }
 
       // 更新用户状态
@@ -95,28 +106,28 @@ export class UserService {
       // 记录状态变更日志
       const logData: LoginLogInsert = {
         user_id: userId,
-        login_method: 'google',
+        login_method: "google",
         success: true,
         ip_address: null,
         user_agent: null,
         location: {
-          action: 'status_change',
+          action: "status_change",
           oldStatus: existingUser.status,
-          newStatus: status
-        }
+          newStatus: status,
+        },
       };
       await LogModel.create(logData);
 
-      LoggerUtil.info('更新用户状态成功', { 
-        userId, 
+      LoggerUtil.info("更新用户状态成功", {
+        userId,
         oldStatus: existingUser.status,
-        newStatus: status
+        newStatus: status,
       });
 
       return updatedUser;
     } catch (error) {
-      LoggerUtil.error('更新用户状态失败', error);
-      throw error instanceof Error ? error : new Error('更新用户状态失败');
+      LoggerUtil.error("更新用户状态失败", error);
+      throw error instanceof Error ? error : new Error("更新用户状态失败");
     }
   }
 
@@ -128,22 +139,22 @@ export class UserService {
       // 验证用户是否存在
       const existingUser = await UserModel.findById(userId);
       if (!existingUser) {
-        throw new Error('用户不存在');
+        throw new Error("用户不存在");
       }
 
       if (existingUser.email_verified) {
-        throw new Error('邮箱已验证');
+        throw new Error("邮箱已验证");
       }
 
       // 验证邮箱
       const updatedUser = await UserModel.verifyEmail(userId);
 
-      LoggerUtil.info('验证用户邮箱成功', { userId, email: updatedUser.email });
+      LoggerUtil.info("验证用户邮箱成功", { userId, email: updatedUser.email });
 
       return updatedUser;
     } catch (error) {
-      LoggerUtil.error('验证用户邮箱失败', error);
-      throw error instanceof Error ? error : new Error('验证用户邮箱失败');
+      LoggerUtil.error("验证用户邮箱失败", error);
+      throw error instanceof Error ? error : new Error("验证用户邮箱失败");
     }
   }
 
@@ -151,34 +162,37 @@ export class UserService {
    * 更新用户偏好设置
    */
   static async updateUserPreferences(
-    userId: string, 
+    userId: string,
     preferences: Record<string, any>
   ): Promise<User> {
     try {
       // 验证用户是否存在
       const existingUser = await UserModel.findById(userId);
       if (!existingUser) {
-        throw new Error('用户不存在');
+        throw new Error("用户不存在");
       }
 
       // 合并现有偏好设置
       const mergedPreferences = {
         ...existingUser.preferences,
-        ...preferences
+        ...preferences,
       };
 
       // 更新用户偏好设置
-      const updatedUser = await UserModel.updatePreferences(userId, mergedPreferences);
-
-      LoggerUtil.info('更新用户偏好设置成功', { 
+      const updatedUser = await UserModel.updatePreferences(
         userId,
-        updatedKeys: Object.keys(preferences)
+        mergedPreferences
+      );
+
+      LoggerUtil.info("更新用户偏好设置成功", {
+        userId,
+        updatedKeys: Object.keys(preferences),
       });
 
       return updatedUser;
     } catch (error) {
-      LoggerUtil.error('更新用户偏好设置失败', error);
-      throw error instanceof Error ? error : new Error('更新用户偏好设置失败');
+      LoggerUtil.error("更新用户偏好设置失败", error);
+      throw error instanceof Error ? error : new Error("更新用户偏好设置失败");
     }
   }
 
@@ -188,11 +202,11 @@ export class UserService {
   static async updateLastLogin(userId: string): Promise<User> {
     try {
       const updatedUser = await UserModel.updateLastLogin(userId);
-      LoggerUtil.info('更新最后登录时间成功', { userId });
+      LoggerUtil.info("更新最后登录时间成功", { userId });
       return updatedUser;
     } catch (error) {
-      LoggerUtil.error('更新最后登录时间失败', error);
-      throw new Error('更新最后登录时间失败');
+      LoggerUtil.error("更新最后登录时间失败", error);
+      throw new Error("更新最后登录时间失败");
     }
   }
 
@@ -204,11 +218,11 @@ export class UserService {
       // 验证用户是否存在
       const existingUser = await UserModel.findById(userId);
       if (!existingUser) {
-        throw new Error('用户不存在');
+        throw new Error("用户不存在");
       }
 
-      if (existingUser.status === 'inactive') {
-        throw new Error('用户已处于非活跃状态');
+      if (existingUser.status === "inactive") {
+        throw new Error("用户已处于非活跃状态");
       }
 
       // 软删除用户
@@ -217,23 +231,23 @@ export class UserService {
       // 记录删除日志
       const logData: LoginLogInsert = {
         user_id: userId,
-        login_method: 'google',
+        login_method: "google",
         success: true,
         ip_address: null,
         user_agent: null,
         location: {
-          action: 'user_deactivated',
-          reason: 'user_requested'
-        }
+          action: "user_deactivated",
+          reason: "user_requested",
+        },
       };
       await LogModel.create(logData);
 
-      LoggerUtil.info('用户账号已停用', { userId });
+      LoggerUtil.info("用户账号已停用", { userId });
 
       return updatedUser;
     } catch (error) {
-      LoggerUtil.error('停用用户账号失败', error);
-      throw error instanceof Error ? error : new Error('停用用户账号失败');
+      LoggerUtil.error("停用用户账号失败", error);
+      throw error instanceof Error ? error : new Error("停用用户账号失败");
     }
   }
 
@@ -244,7 +258,7 @@ export class UserService {
     try {
       return await UserModel.exists(userId);
     } catch (error) {
-      LoggerUtil.error('检查用户是否存在失败', error);
+      LoggerUtil.error("检查用户是否存在失败", error);
       return false;
     }
   }
@@ -254,19 +268,22 @@ export class UserService {
    */
   static async getUserStats(userId: string): Promise<{
     id: string;
+    google_id: string;
     email: string;
     name: string;
+    avatar_url: string | null;
     status: UserStatus;
-    emailVerified: boolean;
-    createdAt: string;
-    updatedAt: string;
-    lastLoginAt: string | null;
+    email_verified: boolean;
+    created_at: string;
+    updated_at: string;
+    last_login_at: string | null;
+    preferences: Record<string, any> | null;
     totalSessions: number;
   }> {
     try {
       const user = await UserModel.findById(userId);
       if (!user) {
-        throw new Error('用户不存在');
+        throw new Error("用户不存在");
       }
 
       // TODO: 获取用户会话统计
@@ -274,18 +291,21 @@ export class UserService {
 
       return {
         id: user.id,
+        google_id: user.google_id,
         email: user.email,
         name: user.name,
+        avatar_url: user.avatar_url,
         status: user.status,
-        emailVerified: user.email_verified,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at,
-        lastLoginAt: user.last_login_at,
-        totalSessions
+        email_verified: user.email_verified,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        last_login_at: user.last_login_at,
+        preferences: user.preferences,
+        totalSessions,
       };
     } catch (error) {
-      LoggerUtil.error('获取用户统计信息失败', error);
-      throw error instanceof Error ? error : new Error('获取用户统计信息失败');
+      LoggerUtil.error("获取用户统计信息失败", error);
+      throw error instanceof Error ? error : new Error("获取用户统计信息失败");
     }
   }
 
@@ -299,9 +319,9 @@ export class UserService {
         return false;
       }
 
-      return user.status === 'active' && user.email_verified;
+      return user.status === "active" && user.email_verified;
     } catch (error) {
-      LoggerUtil.error('验证用户有效性失败', error);
+      LoggerUtil.error("验证用户有效性失败", error);
       return false;
     }
   }
@@ -314,7 +334,7 @@ export class UserService {
     name: string;
     avatar_url: string | null;
     status: UserStatus;
-    createdAt: string;
+    created_at: string;
   } | null> {
     try {
       const user = await UserModel.findById(userId);
@@ -327,11 +347,11 @@ export class UserService {
         name: user.name,
         avatar_url: user.avatar_url,
         status: user.status,
-        createdAt: user.created_at
+        created_at: user.created_at,
       };
     } catch (error) {
-      LoggerUtil.error('获取用户公开信息失败', error);
+      LoggerUtil.error("获取用户公开信息失败", error);
       return null;
     }
   }
-} 
+}

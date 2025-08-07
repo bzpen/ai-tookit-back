@@ -5,6 +5,8 @@ import { googleConfig } from "../config/google.config";
 import { ResponseUtil } from "../utils/response.util";
 import { LoggerUtil } from "../utils/logger.util";
 import { CryptoUtil } from "../utils/crypto.util";
+import { UserService } from "../services/user.service";
+import type { UserInfoResponse } from "../types/user.types";
 
 /**
  * 认证控制器
@@ -146,15 +148,32 @@ export class AuthController {
         return;
       }
 
+      // 从数据库获取完整的用户信息
+      const fullUser = await UserService.getUserById(user.userId);
+
+      if (!fullUser) {
+        ResponseUtil.error(res, "用户信息不存在", 404);
+        return;
+      }
+
+      const userInfo: UserInfoResponse = {
+        id: fullUser.id,
+        google_id: fullUser.google_id,
+        email: fullUser.email,
+        name: fullUser.name,
+        avatar_url: fullUser.avatar_url,
+        status: fullUser.status,
+        created_at: fullUser.created_at,
+        updated_at: fullUser.updated_at,
+        last_login_at: fullUser.last_login_at,
+        email_verified: fullUser.email_verified,
+        preferences: fullUser.preferences,
+      };
+
       ResponseUtil.success(
         res,
         {
-          user: {
-            id: user.userId,
-            email: user.email,
-            username: user.username,
-            role: user.role,
-          },
+          user: userInfo,
         },
         "获取用户信息成功"
       );
